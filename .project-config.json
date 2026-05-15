@@ -1,0 +1,35 @@
+{
+  "build_command": "pnpm run build",
+  "capabilities": [],
+  "dev_command": "pnpm run dev",
+  "env_vars": {},
+  "experiments": null,
+  "git_remote": {
+    "repo_url": "s3://vida-prod-gitrepo/webdev-git/310519663621968227/CM3dugtQ88PNk5FGG6DJZY",
+    "access_key_id": "ASIAZV3A2ECZLH4N4RF3",
+    "secret_access_key": "+Y0iS8MOsYU65Mmq0mP4EF2RLIoXBXwtcNDNC2r7",
+    "session_token": "IQoJb3JpZ2luX2VjELX//////////wEaCXVzLWVhc3QtMSJIMEYCIQCUs+tzuakN7/FdeYQ+ACfEk8v0qS+lvztr4CNF6aPCwwIhALADjXqfqZgcQXyl4FIrAjgF58+urH854iY4zJF3XOQwKvUDCH4QBBoMNjY1Mzg2MDk4ODY2Igxuk32UF7ujU4lELXAq0gMusn5yyxlv9HOPa7M4kjoXjECHgoNWV/nH1bpa5MMQMw3+qVXcrbDr76fQ/C44t5kmKjJJ3tupzMSOoHPrCSgAK8XosQK7Wkha/sRySP8EKhE3BDDKM6gBlpt4wd0mZrlxPcWZmX9g6+gzY48wsqBUm7MV4oH9oDckddrXZzYCSX2ZHcFvC8G29hypQ5arP4MpTNgf0bqUYOMqLvZwIAAs4GpWJuTW5YePxbWmVVG7jy2bVQf4S6eIGdqUiuKR0r1s3jMMle5oY9YChA80iW666RQ7AFu1uaCIbJ1fnMZG3oEl1CRZgsXH+aAi9jABovN3VCRGZz1w/n27yYg7whzVn7IGLe3m/XDnb+AESJsx4NX1eRsJdXk1tfiTW6r9J5yS/bCx5EfodN4ltX73fg+Qeqr7KnIrMlVmWNRHaQvFCE6mIDdTFUqtSMPMJr99SCxUdiuyqRLFGmi4XzmMtOqMkU1mlZ1TRJ+CmlI3ye0stl0gUocRKZdnpmM9f2pd9wEykYmBLx92YJvFSJbfLgH6uRCDcYH9/YM7VRxSr5uiaO3iktGFG+Qg1De9jBsRq8cidVCaLhqbPSCWYDipRV+CTiwuYRcekR4JCOooWR09LTsXMK+KntAGOpwBH6ko38p6uRzhTR+W624WOa3/wc20ENkZCKIvKhwzVoLT/SADb7VMpKPr9pbDThVAKmCF+QpIz7GDxOtn3CcWnhnna/oOgj6TemWcflTG+W8938ftJD3FpC/ANR21H9YKPMYQ9AnF5aH297juTaSX2zNQy65DJQkiezHN8CSI3OjdpnTKXJ4Y2mej4qMnx+bFuK7ONAK/T1YKlLFU",
+    "expiration": "2026-05-16T08:42:23.000Z"
+  },
+  "name": "sharizkreations",
+  "path": "/home/ubuntu/sharizkreations",
+  "port": 3000,
+  "secrets": {
+    "BUILT_IN_FORGE_API_KEY": "NLnRAhXW9yFTyTEqrBN5Ud",
+    "BUILT_IN_FORGE_API_URL": "https://forge.manus.ai",
+    "JWT_SECRET": "bQwuquS2HcV82FPuFeUoKJ",
+    "OAUTH_SERVER_URL": "https://api.manus.im",
+    "OWNER_NAME": "Real Ty",
+    "OWNER_OPEN_ID": "74zoy4RsCrYovfZxw3Hqqj",
+    "VITE_ANALYTICS_ENDPOINT": "https://manus-analytics.com",
+    "VITE_ANALYTICS_WEBSITE_ID": "605950b0-9f4f-40e5-b078-eab63632e26c",
+    "VITE_APP_ID": "CM3dugtQ88PNk5FGG6DJZY",
+    "VITE_APP_LOGO": "",
+    "VITE_APP_TITLE": "ShaRiz Kreations — Resin Art by Shaz",
+    "VITE_FRONTEND_FORGE_API_KEY": "Mkg22zEK5BWASGsFFGbmkf",
+    "VITE_FRONTEND_FORGE_API_URL": "https://forge.manus.ai",
+    "VITE_OAUTH_PORTAL_URL": "https://manus.im"
+  },
+  "template_id": "web-static",
+  "test_command": "pnpm test"
+}
