@@ -12,55 +12,66 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'pnpm'
+
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
+
       - name: Build
         run: pnpm build
-      - name: Inject cache-bust timestamp into index.html
-        run: |
-          BUILD_TS=$(date +%s)
-          sed -i "s|\.js\">|.js?v=${BUILD_TS}\">|g" dist/public/index.html
-          sed -i "s|\.css\">|.css?v=${BUILD_TS}\">|g" dist/public/index.html
-          sed -i "s|\.js\" crossorigin|.js?v=${BUILD_TS}\" crossorigin|g" dist/public/index.html
-          sed -i "s|\.css\" crossorigin|.css?v=${BUILD_TS}\" crossorigin|g" dist/public/index.html
-          echo "Cache-bust timestamp: ${BUILD_TS}"
-          grep -o 'index-[A-Za-z0-9]*\.[jc][ss][^"]*' dist/public/index.html
+
       - name: Install lftp
         run: sudo apt-get install -y lftp
-      - name: Deploy via FTP
+
+      - name: Deploy via FTP (active mode - bypasses passive port firewall)
         env:
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USERNAME }}
           FTP_PASS: ${{ secrets.FTP_PASSWORD }}
         run: |
-          # FTP sub-account home: /home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/
-          # Web root for sharizkreations.com: .../shariz/
-          # FTP relative path from sub-account home: /shariz/
-          # Using ssl-data-prot C (clear data channel) to fix "530 Login failed" on mirror
-          cat > /tmp/deploy.lftp << LFTPEOF
+          # Web root for sharizkreations.com (confirmed via cPanel File Manager):
+          # Full path: /home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz/
+          # FTP sub-account home = /home2/esacunmy/
+          # Relative FTP path = /website-7b890dc7.esa.cun.mybluehost.me/shariz/
+          #
+          # Using ACTIVE mode (passive-mode no) to bypass Bluehost passive port firewall.
+          # Active mode: GitHub runner opens a local port, Bluehost connects back to it.
+          # This avoids the blocked passive port range entirely.
+
+          cat > /tmp/deploy.lftp << 'LFTPEOF'
 set ftp:ssl-allow yes
 set ftp:ssl-force yes
 set ssl:verify-certificate no
-set ftp:ssl-data-prot C
-set ftp:passive-mode yes
+set ftp:passive-mode no
 set net:timeout 60
 set net:max-retries 3
-open -u "$FTP_USER","$FTP_PASS" ftp://$FTP_HOST
-echo "=== Connected to Bluehost FTP ==="
-echo "=== Cleaning old files from /shariz/ ==="
-rm -rf /shariz/assets
-rm -f /shariz/index.html
-rm -f /shariz/.htaccess
-rm -rf /shariz/__manus__
-echo "=== Uploading new build to /shariz/ ==="
-mirror --reverse --verbose --parallel=3 dist/public/ /shariz/
+set net:reconnect-interval-base 5
+LFTPEOF
+
+          # Append credentials (separate to avoid quoting issues with special chars)
+          echo "open -u \"$FTP_USER\",\"$FTP_PASS\" ftp://$FTP_HOST" >> /tmp/deploy.lftp
+
+          cat >> /tmp/deploy.lftp << 'LFTPEOF'
+echo "=== Connected to Bluehost FTP (active mode) ==="
+echo "=== Cleaning old files from web root ==="
+rm -rf /website-7b890dc7.esa.cun.mybluehost.me/shariz/assets
+rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/index.html
+rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/.htaccess
+rm -rf /website-7b890dc7.esa.cun.mybluehost.me/shariz/__manus__
+echo "=== Uploading new build ==="
+mirror --reverse --verbose --parallel=3 dist/public/ /website-7b890dc7.esa.cun.mybluehost.me/shariz/
 echo "=== Deploy complete! ==="
 LFTPEOF
+
+          echo "=== lftp script ==="
+          cat /tmp/deploy.lftp
+          echo "=== Running lftp ==="
           lftp -f /tmp/deploy.lftp
