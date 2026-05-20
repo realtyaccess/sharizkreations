@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 jobs:
@@ -44,7 +45,6 @@ jobs:
           #
           # Using ACTIVE mode (passive-mode no) to bypass Bluehost passive port firewall.
           # Active mode: GitHub runner opens a local port, Bluehost connects back to it.
-          # This avoids the blocked passive port range entirely.
 
           cat > /tmp/deploy.lftp << 'LFTPEOF'
 set ftp:ssl-allow yes
@@ -54,9 +54,11 @@ set ftp:passive-mode no
 set net:timeout 60
 set net:max-retries 3
 set net:reconnect-interval-base 5
+set ftp:use-feat yes
+set ftp:use-mdtm yes
+debug 5
 LFTPEOF
 
-          # Append credentials (separate to avoid quoting issues with special chars)
           echo "open -u \"$FTP_USER\",\"$FTP_PASS\" ftp://$FTP_HOST" >> /tmp/deploy.lftp
 
           cat >> /tmp/deploy.lftp << 'LFTPEOF'
@@ -67,11 +69,9 @@ rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/index.html
 rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/.htaccess
 rm -rf /website-7b890dc7.esa.cun.mybluehost.me/shariz/__manus__
 echo "=== Uploading new build ==="
-mirror --reverse --verbose --parallel=3 dist/public/ /website-7b890dc7.esa.cun.mybluehost.me/shariz/
+mirror --reverse --verbose --parallel=1 dist/public/ /website-7b890dc7.esa.cun.mybluehost.me/shariz/
 echo "=== Deploy complete! ==="
 LFTPEOF
 
-          echo "=== lftp script ==="
-          cat /tmp/deploy.lftp
-          echo "=== Running lftp ==="
-          lftp -f /tmp/deploy.lftp
+          echo "=== Running lftp with debug ==="
+          lftp -f /tmp/deploy.lftp 2>&1
