@@ -1,0 +1,39 @@
+name: Debug FTP Working Dir
+on:
+  workflow_dispatch:
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+jobs:
+  debug-ftp6:
+    name: Check FTP working directory and upload test file
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+      - name: Check FTP details and upload test file
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          echo "FTP Host: $FTP_HOST"
+          echo "FTP User: $FTP_USER"
+          # Create a test file
+          echo "TEST_FILE_$(date +%s)" > /tmp/manus_test.txt
+          lftp -c "
+            set ftp:ssl-allow yes;
+            set ftp:ssl-force yes;
+            set ssl:verify-certificate no;
+            set net:timeout 30;
+            set net:max-retries 3;
+            open -u '$FTP_USER','$FTP_PASS' ftp://$FTP_HOST;
+            echo '=== PWD ===';
+            pwd;
+            echo '=== Uploading test file to FTP root ===';
+            put -O / /tmp/manus_test.txt;
+            echo '=== Uploading test file to /public_html/ ===';
+            put -O /public_html/ /tmp/manus_test.txt;
+            echo '=== Uploading test file to /public_html/website_7b890dc7/ ===';
+            put -O /public_html/website_7b890dc7/ /tmp/manus_test.txt;
+            echo '=== Done ===';
+          "
