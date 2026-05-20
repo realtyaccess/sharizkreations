@@ -61,12 +61,14 @@ jobs:
             set net:max-retries 3;
             open -u '$FTP_USER','$FTP_PASS' ftp://$FTP_HOST;
             echo 'Connected to Bluehost FTP';
-            echo 'Deleting old files in /public_html/website_7b890dc7/...';
+            echo 'Step 1: Deleting old assets and index.html...';
             rm -rf /public_html/website_7b890dc7/assets;
             rm -f /public_html/website_7b890dc7/index.html;
             rm -f /public_html/website_7b890dc7/.htaccess;
             rm -rf /public_html/website_7b890dc7/__manus__;
-            echo 'Old files deleted. Uploading fresh build...';
-            mirror --reverse --verbose --parallel=5 dist/public/ /public_html/website_7b890dc7/;
-            echo 'Deploy complete!';
+            echo 'Step 2: Uploading assets and static files...';
+            mirror --reverse --verbose --parallel=5 --exclude=index.html dist/public/ /public_html/website_7b890dc7/;
+            echo 'Step 3: Force uploading index.html last (ensures it is always fresh)...';
+            put -O /public_html/website_7b890dc7/ dist/public/index.html;
+            echo 'Deploy complete! index.html uploaded last.';
           "
