@@ -1,0 +1,32 @@
+name: Debug FTP Full Tree
+on:
+  workflow_dispatch:
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+jobs:
+  debug-ftp4:
+    name: Full FTP tree listing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+      - name: Full FTP tree listing
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -c "
+            set ftp:ssl-allow yes;
+            set ftp:ssl-force yes;
+            set ssl:verify-certificate no;
+            set net:timeout 30;
+            set net:max-retries 3;
+            open -u '$FTP_USER','$FTP_PASS' ftp://$FTP_HOST;
+            echo '=== FULL TREE (3 levels deep) ===';
+            find / -maxdepth 3 -ls 2>/dev/null | head -100;
+            echo '=== LOOKING FOR CDSVRWHP.js ===';
+            find / -name '*CDSVRWHP*' 2>/dev/null;
+            echo '=== LOOKING FOR index.html files ===';
+            find / -name 'index.html' -ls 2>/dev/null;
+          "
