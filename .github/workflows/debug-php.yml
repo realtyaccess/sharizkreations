@@ -1,0 +1,55 @@
+name: Debug PHP Document Root
+on:
+  workflow_dispatch:
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+jobs:
+  debug-php:
+    name: Upload PHP info file to find document root
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+      - name: Create and upload PHP file
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          # Create PHP file that reveals document root
+          cat > /tmp/manus_info.php << 'PHPEOF'
+          <?php
+          echo "DOCUMENT_ROOT=" . $_SERVER['DOCUMENT_ROOT'] . "\n";
+          echo "SCRIPT_FILENAME=" . $_SERVER['SCRIPT_FILENAME'] . "\n";
+          echo "SERVER_NAME=" . $_SERVER['SERVER_NAME'] . "\n";
+          echo "PHP_SELF=" . $_SERVER['PHP_SELF'] . "\n";
+          echo "REAL_PATH=" . realpath('.') . "\n";
+          echo "CWD=" . getcwd() . "\n";
+          ?>
+          PHPEOF
+          
+          # Upload to all possible locations
+          lftp -c "
+            set ftp:ssl-allow yes;
+            set ftp:ssl-force yes;
+            set ssl:verify-certificate no;
+            set net:timeout 30;
+            set net:max-retries 3;
+            open -u '$FTP_USER','$FTP_PASS' ftp://$FTP_HOST;
+            echo '=== Uploading PHP file to FTP root ===';
+            put -O / /tmp/manus_info.php;
+            echo '=== Uploading PHP file to /public_html/ ===';
+            put -O /public_html/ /tmp/manus_info.php;
+            echo '=== Uploading PHP file to /public_html/website_7b890dc7/ ===';
+            put -O /public_html/website_7b890dc7/ /tmp/manus_info.php;
+            echo '=== Done uploading ===';
+          "
+          
+          echo "PHP files uploaded. Now checking which location is the web root..."
+          sleep 3
+          
+          # Check which location serves the PHP file
+          echo "=== Testing FTP root ==="
+          curl -s --max-time 10 "http://sharizkreations.com/manus_info.php" | head -5
+          
+          echo "=== Done ==="
