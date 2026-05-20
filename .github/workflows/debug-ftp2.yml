@@ -1,0 +1,36 @@
+name: Debug FTP Structure 2
+on:
+  workflow_dispatch:
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+jobs:
+  debug-ftp2:
+    name: Debug FTP public_html contents
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+      - name: List FTP public_html directory
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -c "
+            set ftp:ssl-allow yes;
+            set ftp:ssl-force yes;
+            set ssl:verify-certificate no;
+            set net:timeout 30;
+            set net:max-retries 3;
+            open -u '$FTP_USER','$FTP_PASS' ftp://$FTP_HOST;
+            echo '=== /public_html/ contents ===';
+            ls /public_html/;
+            echo '=== /public_html/assets/ contents ===';
+            ls /public_html/assets/ 2>/dev/null || echo 'No /public_html/assets/';
+            echo '=== /assets/ contents ===';
+            ls /assets/ 2>/dev/null || echo 'No /assets/';
+            echo '=== Root index.html details ===';
+            ls -la /index.html 2>/dev/null || echo 'No /index.html';
+            echo '=== /public_html/index.html details ===';
+            ls -la /public_html/index.html 2>/dev/null || echo 'No /public_html/index.html';
+          "
