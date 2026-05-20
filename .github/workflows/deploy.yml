@@ -62,13 +62,13 @@ jobs:
             open -u '$FTP_USER','$FTP_PASS' ftp://$FTP_HOST;
             echo 'Connected to Bluehost FTP';
             echo 'Step 1: Deleting old assets and index.html...';
-            rm -rf /public_html/website_7b890dc7/assets;
-            rm -f /public_html/website_7b890dc7/index.html;
-            rm -f /public_html/website_7b890dc7/.htaccess;
-            rm -rf /public_html/website_7b890dc7/__manus__;
+            rm -rf /public_html/assets;
+            rm -f /public_html/index.html;
+            rm -f /public_html/.htaccess;
+            rm -rf /public_html/__manus__;
             echo 'Step 2: Uploading assets and static files...';
-            mirror --reverse --verbose --parallel=5 --exclude=index.html dist/public/ /public_html/website_7b890dc7/;
+            mirror --reverse --verbose --parallel=5 --exclude=index.html dist/public/ /public_html/;
             echo 'Step 3: Force uploading index.html last (ensures it is always fresh)...';
-            put -O /public_html/website_7b890dc7/ dist/public/index.html;
+            put -O /public_html/ dist/public/index.html;
             echo 'Deploy complete! index.html uploaded last.';
           "
