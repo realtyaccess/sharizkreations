@@ -32,24 +32,26 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 5. Build the production bundle (outputs to dist/)
+      # 5. Build the production bundle (outputs to dist/public/)
       - name: Build
         run: pnpm build
 
-      # 6. Deploy dist/ to Bluehost via FTP
-      #    Secrets required (add in GitHub → Settings → Secrets → Actions):
-      #      FTP_HOST     — e.g. ftp.sharizkreations.com  (or your Bluehost FTP hostname)
-      #      FTP_USERNAME — your Bluehost FTP username
-      #      FTP_PASSWORD — your Bluehost FTP password
+      # 6. Deploy dist/public/ to Bluehost via FTP
+      #    Bluehost uses Explicit FTPS on port 21
+      #    Secrets in GitHub → Settings → Secrets → Actions:
+      #      FTP_HOST     = ftp.esa.cun.mybluehost.me
+      #      FTP_USERNAME = SHARIZ@website-7b890dc7.esa.cun.mybluehost.me
+      #      FTP_PASSWORD = your Bluehost/cPanel password
       - name: Deploy via FTP to Bluehost
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/
+          port: 21
+          protocol: ftps
+          local-dir: ./dist/public/
           server-dir: /public_html/
-          # Exclude source maps and dev files from production
           exclude: |
             **/.git*
             **/.git*/**
