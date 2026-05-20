@@ -31,37 +31,18 @@ jobs:
           sed -i "s|\.js\" crossorigin|.js?v=${BUILD_TS}\" crossorigin|g" dist/public/index.html
           sed -i "s|\.css\" crossorigin|.css?v=${BUILD_TS}\" crossorigin|g" dist/public/index.html
           echo "Cache-bust timestamp: ${BUILD_TS}"
-          echo "index.html script tags:"
           grep -o 'index-[A-Za-z0-9]*\.[jc][ss][^"]*' dist/public/index.html
-      - name: Install lftp for FTP operations
-        run: sudo apt-get install -y lftp
-      - name: Clean remote directory and deploy fresh build
-        env:
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USER: ${{ secrets.FTP_USERNAME }}
-          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
-        run: |
-          # CONFIRMED via cPanel File Manager:
-          # Full server path: /home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz
-          # FTP root maps to /home2/esacunmy/ so FTP path is: /website-7b890dc7.esa.cun.mybluehost.me/shariz/
-          lftp -c "
-            set ftp:ssl-allow yes;
-            set ftp:ssl-force yes;
-            set ssl:verify-certificate no;
-            set net:timeout 60;
-            set net:max-retries 5;
-            set net:reconnect-interval-base 5;
-            set net:reconnect-interval-multiplier 1;
-            open -u '$FTP_USER','$FTP_PASS' ftp://$FTP_HOST;
-            echo 'Connected to Bluehost FTP';
-            echo 'Step 1: Deleting old assets from /website-7b890dc7.esa.cun.mybluehost.me/shariz/...';
-            rm -rf /website-7b890dc7.esa.cun.mybluehost.me/shariz/assets;
-            rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/index.html;
-            rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/.htaccess;
-            rm -rf /website-7b890dc7.esa.cun.mybluehost.me/shariz/__manus__;
-            echo 'Step 2: Uploading new build to /website-7b890dc7.esa.cun.mybluehost.me/shariz/...';
-            mirror --reverse --verbose --parallel=5 --exclude=index.html dist/public/ /website-7b890dc7.esa.cun.mybluehost.me/shariz/;
-            echo 'Step 3: Uploading index.html last...';
-            put -O /website-7b890dc7.esa.cun.mybluehost.me/shariz/ dist/public/index.html;
-            echo 'Deploy complete!';
-          "
+      - name: Deploy via FTP to Bluehost
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/public/
+          server-dir: /website-7b890dc7.esa.cun.mybluehost.me/shariz/
+          dangerous-clean-slate: true
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/*.map
