@@ -1,6 +1,5 @@
 name: Build & Deploy to Bluehost
 
-# Trigger: every push to main branch
 on:
   push:
     branches:
@@ -15,31 +14,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Install pnpm (version read from package.json packageManager field)
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
-      # 3. Set up Node.js 22
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'pnpm'
 
-      # 4. Install dependencies
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      # 5. Build the production bundle (outputs to dist/public/)
       - name: Build
         run: pnpm build
 
-      # 6. Cache-bust: inject build timestamp into index.html so LiteSpeed
-      #    and any CDN always serve the freshest version on every deploy.
       - name: Inject cache-bust timestamp into index.html
         run: |
           BUILD_TS=$(date +%s)
@@ -48,23 +40,33 @@ jobs:
           sed -i "s|\.js\" crossorigin|.js?v=${BUILD_TS}\" crossorigin|g" dist/public/index.html
           sed -i "s|\.css\" crossorigin|.css?v=${BUILD_TS}\" crossorigin|g" dist/public/index.html
           echo "Cache-bust timestamp: ${BUILD_TS}"
+          echo "index.html script tags:"
+          grep -o 'index-[A-Za-z0-9]*\.[jc][ss][^"]*' dist/public/index.html
 
-      # 7. Deploy dist/public/ to Bluehost via explicit FTPS (port 21)
-      #    Using dangerous-clean-slate=true to force a FULL re-upload every time,
-      #    ensuring Bluehost always has exactly what was just built — no stale files.
-      - name: Deploy via FTP to Bluehost (full clean upload)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: 21
-          protocol: ftps
-          local-dir: ./dist/public/
-          server-dir: /public_html/website_7b890dc7/
-          dangerous-clean-slate: true
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/*.map
+      - name: Install lftp for FTP operations
+        run: sudo apt-get install -y lftp
+
+      - name: Clean remote directory and deploy fresh build
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          # Use lftp to delete all files in the remote directory and upload fresh build
+          lftp -c "
+            set ftp:ssl-allow yes;
+            set ftp:ssl-force yes;
+            set ssl:verify-certificate no;
+            set net:timeout 30;
+            set net:max-retries 3;
+            open -u '$FTP_USER','$FTP_PASS' ftp://$FTP_HOST;
+            echo 'Connected to Bluehost FTP';
+            echo 'Deleting old files in /public_html/website_7b890dc7/...';
+            rm -rf /public_html/website_7b890dc7/assets;
+            rm -f /public_html/website_7b890dc7/index.html;
+            rm -f /public_html/website_7b890dc7/.htaccess;
+            rm -rf /public_html/website_7b890dc7/__manus__;
+            echo 'Old files deleted. Uploading fresh build...';
+            mirror --reverse --verbose --parallel=5 dist/public/ /public_html/website_7b890dc7/;
+            echo 'Deploy complete!';
+          "
