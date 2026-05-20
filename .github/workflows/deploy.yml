@@ -1,0 +1,57 @@
+name: Build & Deploy to Bluehost
+
+# Trigger: every push to main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build React app and FTP deploy to Bluehost
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Set up Node.js 20
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      # 4. Install dependencies
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 5. Build the production bundle (outputs to dist/)
+      - name: Build
+        run: pnpm build
+
+      # 6. Deploy dist/ to Bluehost via FTP
+      #    Secrets required (add in GitHub → Settings → Secrets → Actions):
+      #      FTP_HOST     — e.g. ftp.sharizkreations.com  (or your Bluehost FTP hostname)
+      #      FTP_USERNAME — your Bluehost FTP username
+      #      FTP_PASSWORD — your Bluehost FTP password
+      - name: Deploy via FTP to Bluehost
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: /public_html/
+          # Exclude source maps and dev files from production
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/*.map

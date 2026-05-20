@@ -1,12 +1,13 @@
-/**
+/*
  * ShaRiz Kreations — Home Page
  * Design: "Dark Atelier" — Obsidian bg, warm gold accents, Cormorant Garamond display
- * Updated: All original photos from Shaz, WhatsApp +14039867064
+ * Updated: Hero video background, enhanced custom order form with WhatsApp pre-fill
  */
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { Instagram, MapPin, Star, ChevronDown, X, Menu, ShoppingBag, Sparkles, Heart, Upload, MessageCircle, Check } from "lucide-react";
+import { Instagram, MapPin, Star, ChevronDown, X, Menu, ShoppingBag, Sparkles, Heart, Upload, MessageCircle, Check, Calendar, DollarSign, Phone } from "lucide-react";
+import { Link } from "wouter";
 import { toast } from "sonner";
 
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
@@ -16,108 +17,110 @@ function getWhatsAppLink(message: string) {
 }
 
 // ─── Logo (SRK) ───────────────────────────────────────────────────────────────
-const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663621968227/CM3dugtQ88PNk5FGG6DJZY/srk_logo_v2-gq3kZxkAn2WXgMvA53YFJX.webp";
+const LOGO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/ZYazBilkNRkihWBw.png";
+
+// ─── Hero Video ───────────────────────────────────────────────────────────────
+const HERO_VIDEO_URL = "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/AXvCyzWVXNtXqfaI.mp4";
 
 // ─── All 94 real photos from Shaz (verified CDN paths) ───────────────────────
 const ALL_PHOTOS = [
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.32AM_b6270ca4.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.33AM_6811ca24.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.34AM(1)_eb9a0745.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.34AM(2)_10b2b570.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.34AM_84a17c29.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.35AM(1)_aa9eddfc.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.35AM_e38a899e.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.36AM(1)_df3ee9d3.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.36AM(2)_4056b9de.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.36AM_c080ecc8.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.37AM(1)_88e9915b.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.37AM_e05fdf29.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.38AM_a45f9e65.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.39AM(1)_6b077ea4.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.39AM_dcc71573.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.40AM_57a678f6.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.49AM_c8e57f61.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.51AM(1)_4af334c2.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.51AM_79ec7535.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.52AM(1)_0957d2a9.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.52AM_d0b903e0.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.53AM(1)_18ef178d.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.53AM_a446a43d.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.54AM(1)_ecfea5cb.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.54AM(2)_a34e974a.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.54AM_4f219b1a.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.55AM(1)_70c51e33.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.55AM_e672ff73.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.56AM(1)_3786d8c1.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.56AM_c8100e62.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.57AM(1)_a231eff5.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.57AM_1e8d3e79.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.58AM(1)_ab8a2ebc.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.58AM(2)_5211edf7.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.58AM_abfeba7a.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.59AM(1)_f90a1bee.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.54.59AM_43a7f7d8.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.00AM(1)_5d234212.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.00AM(2)_dc80da22.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.00AM_f2ffea8e.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.01AM(1)_a9a34db7.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.01AM(2)_7f73d4e4.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.01AM_28f67893.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.02AM(1)_4776eba8.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.02AM(2)_8a93f303.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.02AM_fe5fcf92.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.03AM(1)_b3c2565f.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.03AM_62531c49.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.04AM(1)_1bae0a32.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.04AM(2)_21510925.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.04AM(3)_8a3c39b7.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.04AM_abb1f213.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.05AM(1)_91a1ede4.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.05AM(2)_ab922825.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.05AM_880aa12b.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.06AM(1)_bb257e62.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.06AM_b01d330b.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.07AM_2a0a1f85.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.09AM(1)_32b5ce95.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.09AM_505410dc.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.10AM(1)_ae6822ed.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.10AM_f2fbb10d.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.12AM_c177698f.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.13AM(1)_494fe624.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.13AM_fe3cb035.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.14AM_e4f8f9ac.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.16AM(1)_3b89f6b6.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.16AM_66ab51c1.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.19AM_d1f625d8.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.21AM(1)_87079bac.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.21AM_9232fa59.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.22AM_ac4f85b8.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.55.23AM_88e44ce5.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.43AM(1)_0c98fa72.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.43AM_dc0d4c0d.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.44AM(1)_d01d38cb.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.44AM(2)_c9c6ede7.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.44AM_2b22af62.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.45AM(1)_8103592b.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.45AM_dce4e90c.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.46AM(1)_5e268da1.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.46AM(2)_586fc73c.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.46AM_f735fea3.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.47AM(1)_ca598a2d.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.47AM(2)_f1a8ff6a.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.47AM(3)_05c4ce6c.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.47AM_d98ffad8.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.48AM(1)_a9dec16f.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.48AM(2)_97b30f0f.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.48AM_68e3a38f.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.49AM(1)_5e7f643d.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.49AM_5f1fb213.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.50AM(1)_55319363.jpeg",
-  "/manus-storage/WhatsAppImage2026-05-16at12.56.50AM_1e2e903f.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/ERFeIfkLvqNXPzdq.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/jIdbpQhEiRCMnLjd.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/areGqXWMJcJCOHbY.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/nOBQneVaAhbNRRBb.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/jNpuejdVzDLQoaPg.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/IdjZjYpQOKdRozym.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/OGgCqtNnqqPLIBLl.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/XgFJSNOMUBZPRcRI.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/aNoBbUDBEVXblsyX.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/NOWsIDbYmEWrHIuL.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/UFEuhpnODsKwgfhb.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/xKkEntzJljLGFDZy.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/AtbbqUHZHLKxpuYX.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/CukTUKTSIBywqWoA.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/JRsbyBGqwJeSrQNk.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/hRBtOgqiJFtuPzga.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/UeKwYcLmufNAGbYt.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/VzMrUvdCdDyChrkP.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/UOgJdeFDNWDkJBDc.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/clpIuyxNROGmmoMk.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/lcvOXxEwwJhaUFOD.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/QEDLqDZsLluendoo.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/jgvCZOIsNMfpYjMt.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/XceRbpbnhagFxSlc.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/uFyqaYlvNDkgKuSZ.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/chDMHvMOxHgRHkUp.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/ymlxZhtmmZYHFLVc.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/JzVWhyGibfDyYsEi.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/ZrNHcRBqxNxlyhoh.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/LopLoljkOWpxUwqI.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/LbZaEHPJAuXEoFqf.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/HUtHFlsTCttlBSIB.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/aGCCnSEClqGLMolv.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/rUMucBnzABnVYqaZ.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/KzesxVNceeBdqvRL.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/dzPlDUhXZNDBcamq.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/WqDQEbjMkSLRmSly.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/ltphmljSvqzATgoj.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/RRqIWmbeugEorLCt.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/vNlfxuofGrNQMIOT.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/bWlWWRynuvMfKRZR.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/SRPqRAJdjRIeiLZS.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/vTMKXPWdwCYsIXlW.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/ueXmdjxArbFLEXpM.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/nJwBKJxWNkKZoCWH.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/OiqvyfkzDaCwHdRh.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/piedMcBxEoYRADqS.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/GlOoUlewzwwFkfEu.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/WjduVgoEiOSCrLtq.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/tpgkDNcDcwRzZRkr.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/ROvkakjyXawoKcYM.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/DwNpcksYVpqmFEnX.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/rkrIEEvoipueWldT.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/tkwDAwBEAZhnipTD.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/aHvxucdmyfjclnBU.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/aKgnunfDjIWLJxuN.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/FyWGWLQBtLQfJxkU.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/vJZUuAywAIQHlSPL.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/uFTbrtEXuLaLnqNX.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/ePxMqCMxYlDIyZzX.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/pMKFlXNCUsArFhfX.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/xvkzrWfatDPqKpTk.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/XPpIrZAKvGRXHXYf.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/AfdcKoUQQVkkcYWe.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/nHytsviQDJthNGgC.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/UPyfeUDjhWIKQuQa.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/uERuWSVAvqwohntt.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/HrvjDsdNybxizoJQ.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/TjBltxbrliMxXJDb.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/rgxDWGQCsgTBUecz.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/cqaOIXQMMyoNtxoP.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/cVUPPGMCuMsSTkVC.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/azrmYctYHdNvinDx.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/EomKcHjLfrkfSwQq.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/tLZbRwZdLycsNBRa.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/lEyYaaDzctTxZjqy.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/aRjsPvYhOhJjuqKw.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/LMMQwDqraZpmDBbx.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/NNCJKsTERORktueJ.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/BcoqnqHSoFpIcCmc.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/WaGOCLvqDYwKrWhB.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/NuKOTxHaDrJRDKfI.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/UeTQpVCJaknRymes.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/olVVKUSWFdlNCayy.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/AzPioiMeoZSlTiFa.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/IidFnaQHFSIhEDIy.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/NpAnyYDZompkupvS.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/avHDpFRGxPdzQtkH.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/fbXdjQhahivhCfox.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/jiRoIYpVtTqetkMr.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/cMVgWCFdkkUnJiqR.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/jbjaLmZNhVBcQmpy.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/FetvMvBjMWGQwClY.jpeg",
+  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663621968227/aXfuoWuHZxIAGbzf.jpeg",
 ];
 
 // Curated selections for specific sections
-const HERO_IMG = ALL_PHOTOS[0];
 const ABOUT_IMG = ALL_PHOTOS[16];
 
 const PRODUCTS = [
@@ -126,7 +129,7 @@ const PRODUCTS = [
     name: "Resin Coasters",
     subtitle: "Set of 4 — Handcrafted",
     description: "Pressed flowers, gold leaf, and crystal-clear resin. Each set is unique — no two are ever the same. Perfect for gifting or elevating your own space.",
-    price: "From $45",
+    price: "From $50 CAD",
     images: [ALL_PHOTOS[1], ALL_PHOTOS[2], ALL_PHOTOS[3], ALL_PHOTOS[4]],
     tag: "Bestseller",
     waMessage: "Hi Shaz! I'm interested in your Resin Coasters. Could you share more details and availability?",
@@ -136,7 +139,7 @@ const PRODUCTS = [
     name: "Canvas Wall Art",
     subtitle: "Statement Pieces",
     description: "Large-scale resin canvas art with swirling pigments, gold leaf, and deep ocean colors. Each piece transforms any room into a gallery.",
-    price: "From $180",
+    price: "From $200 CAD",
     images: [ALL_PHOTOS[5], ALL_PHOTOS[6], ALL_PHOTOS[7], ALL_PHOTOS[8]],
     tag: "Statement Piece",
     waMessage: "Hi Shaz! I'm interested in your Canvas Wall Art. Could you share more details?",
@@ -146,7 +149,7 @@ const PRODUCTS = [
     name: "Serving Trays",
     subtitle: "Luxury Home Decor",
     description: "Resin serving trays with marble effects, gold veining, and scalloped edges. Functional art that elevates every surface it graces.",
-    price: "From $95",
+    price: "From $110 CAD",
     images: [ALL_PHOTOS[9], ALL_PHOTOS[10], ALL_PHOTOS[11], ALL_PHOTOS[12]],
     tag: "Luxury",
     waMessage: "Hi Shaz! I'm interested in your Resin Serving Trays. Could you share more details?",
@@ -156,7 +159,7 @@ const PRODUCTS = [
     name: "Islamic Calligraphy Art",
     subtitle: "Faith · Framed in Resin",
     description: "White marble resin base with gold Arabic calligraphy. A statement of faith and elegance, handcrafted with love and calm.",
-    price: "From $120",
+    price: "From $150 CAD",
     images: [ALL_PHOTOS[13], ALL_PHOTOS[14], ALL_PHOTOS[15], ALL_PHOTOS[17]],
     tag: "Spiritual",
     waMessage: "Hi Shaz! I'm interested in your Islamic Calligraphy Art. Could you share more details?",
@@ -166,7 +169,7 @@ const PRODUCTS = [
     name: "Piggy Banks & Decor",
     subtitle: "Whimsical Collection",
     description: "Galaxy resin piggy banks, bookends, and desk decor with colorful swirling patterns and gold flakes. A whimsical yet luxurious addition.",
-    price: "From $55",
+    price: "From $60 CAD",
     images: [ALL_PHOTOS[18], ALL_PHOTOS[19], ALL_PHOTOS[20], ALL_PHOTOS[21]],
     tag: "Fan Favourite",
     waMessage: "Hi Shaz! I'm interested in your Resin Piggy Banks & Decor. Could you share more details?",
@@ -189,9 +192,9 @@ const PRICING_TIERS = [
     icon: "✦",
     description: "Perfect for gifting or adding a touch of resin magic to your home.",
     items: [
-      { label: "Coaster Set (4 pieces)", price: "From $45" },
-      { label: "Small Resin Tray (8\")", price: "From $55" },
-      { label: "Piggy Bank / Desk Decor", price: "From $55" },
+      { label: "Coaster Set (4 Pieces)", price: "From $50" },
+      { label: "Small Resin Tray (8\")", price: "From $60" },
+      { label: "Piggy Bank / Desk Decor", price: "From $60" },
       { label: "Keychain / Bookmark", price: "From $15" },
     ],
     highlight: false,
@@ -203,9 +206,9 @@ const PRICING_TIERS = [
     icon: "✦✦",
     description: "Statement pieces that transform any room — our most popular range.",
     items: [
-      { label: "Large Serving Tray (14\")", price: "From $95" },
-      { label: "Islamic Calligraphy Art", price: "From $120" },
-      { label: "Canvas Wall Art (18\"×18\")", price: "From $180" },
+      { label: "Large Serving Tray (14\")", price: "From $110" },
+      { label: "Islamic Calligraphy Art", price: "From $150" },
+      { label: "Canvas Wall Art (18\"×18\")", price: "From $200" },
       { label: "Custom Gift Set", price: "From $150" },
     ],
     highlight: true,
@@ -251,6 +254,9 @@ const TESTIMONIALS = [
 
 // Gallery — use a spread of all real photos
 const GALLERY_PHOTOS = ALL_PHOTOS.slice(26, 50);
+// Indices of "Sold" photos (first 3) and "New" photos (indices 4–8)
+const SOLD_INDICES = [0, 1, 2];
+const NEW_INDICES = [3, 4, 5, 6, 7];
 
 // Instagram feed — last batch of photos
 const INSTA_PHOTOS = ALL_PHOTOS.slice(50, 62);
@@ -303,6 +309,9 @@ function Navigation() {
             ))}
           </div>
           <div className="flex items-center gap-3">
+            <a href={getWhatsAppLink("Hi Shaz! I'd like to place an order.")} target="_blank" rel="noopener noreferrer" title="WhatsApp Shaz" className="hidden lg:flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300 hover:scale-110" style={{ background: "rgba(37,211,102,0.15)", border: "1px solid rgba(37,211,102,0.35)" }}>
+              <svg viewBox="0 0 24 24" fill="#25D166" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            </a>
             <a href={getWhatsAppLink("Hi Shaz! I'd like to place an order.")} target="_blank" rel="noopener noreferrer" className="hidden lg:flex items-center gap-2 btn-gold text-xs">
               <MessageCircle size={13} /> Order Now
             </a>
@@ -337,17 +346,39 @@ function Navigation() {
   );
 }
 
-// ─── Hero Section ──────────────────────────────────────────────────────────────
+// ─── Hero Section (Video Background) ──────────────────────────────────────────
 function HeroSection() {
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 600], [0, 150]);
   const opacity = useTransform(scrollY, [0, 400], [1, 0]);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {
+        // Autoplay blocked — video will show first frame as static background
+      });
+    }
+  }, []);
 
   return (
     <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
+      {/* Video background with parallax */}
       <motion.div className="absolute inset-0" style={{ y }}>
-        <img src={HERO_IMG} alt="ShaRiz Kreations resin art" className="w-full h-full object-cover" style={{ transform: "scale(1.1)" }} />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(10,10,10,0.88) 0%, rgba(10,10,10,0.55) 50%, rgba(10,10,10,0.80) 100%)" }} />
+        <video
+          ref={videoRef}
+          src={HERO_VIDEO_URL}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
+          style={{ transform: "scale(1.1)" }}
+        />
+        {/* Dark overlay for text legibility */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(10,10,10,0.90) 0%, rgba(10,10,10,0.60) 50%, rgba(10,10,10,0.85) 100%)" }} />
+        {/* Gold shimmer at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-32" style={{ background: "linear-gradient(to top, oklch(0.10 0.005 60), transparent)" }} />
       </motion.div>
 
       <motion.div className="relative z-10 container" style={{ opacity }}>
@@ -587,8 +618,14 @@ function GallerySection() {
 
         <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
           {GALLERY_PHOTOS.map((src, i) => (
-            <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: (i % 8) * 0.06 }} className="insta-item break-inside-avoid cursor-pointer mb-3" onClick={() => setLightbox(src)}>
+            <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: (i % 8) * 0.06 }} className="insta-item break-inside-avoid cursor-pointer mb-3 relative" onClick={() => setLightbox(src)}>
               <img src={src} alt={`Gallery ${i + 1}`} className="w-full object-cover" />
+              {SOLD_INDICES.includes(i) && (
+                <div className="absolute top-2 left-2 px-2 py-0.5 text-[9px] font-bold tracking-widest uppercase" style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)", color: "#0d0d0d", fontFamily: "'Jost', sans-serif" }}>✦ Sold</div>
+              )}
+              {NEW_INDICES.includes(i) && (
+                <div className="absolute top-2 left-2 px-2 py-0.5 text-[9px] font-bold tracking-widest uppercase" style={{ background: "linear-gradient(135deg, #2d6a4f, #40916c)", color: "#fff", fontFamily: "'Jost', sans-serif" }}>✦ New</div>
+              )}
             </motion.div>
           ))}
         </div>
@@ -649,25 +686,120 @@ function TestimonialsSection() {
   );
 }
 
-// ─── Custom Orders Section ─────────────────────────────────────────────────────
+// ─── Custom Orders Section (Enhanced) ─────────────────────────────────────────
 function CustomOrdersSection() {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", type: "", message: "", file: null as File | null });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    type: "",
+    budget: "",
+    timeline: "",
+    message: "",
+    file: null as File | null,
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const productTypes = [
+    "Resin Coasters (Set of 4)",
+    "Canvas Wall Art",
+    "Serving Tray",
+    "Piggy Bank / Desk Decor",
+    "Islamic Calligraphy Art",
+    "Wedding / Event Decor",
+    "Custom Gift Set",
+    "Corporate Gifting",
+    "Other / Not Sure Yet",
+  ];
+
+  const budgetRanges = [
+    "Under $50 CAD",
+    "$50 – $100 CAD",
+    "$100 – $200 CAD",
+    "$200 – $350 CAD",
+    "$350 – $500 CAD",
+    "$500+ CAD",
+    "Not Sure — Need a Quote",
+  ];
+
+  const timelines = [
+    "ASAP (Rush Order)",
+    "Within 1–2 Weeks",
+    "Within 1 Month",
+    "1–3 Months",
+    "No Rush — Flexible",
+  ];
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!form.name.trim()) newErrors.name = "Your name is required.";
+    if (!form.email.trim()) newErrors.email = "Email address is required.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = "Please enter a valid email.";
+    if (!form.type) newErrors.type = "Please select a product type.";
+    if (!form.message.trim()) newErrors.message = "Please describe your vision.";
+    else if (form.message.trim().length < 15) newErrors.message = "Please provide a bit more detail (at least 15 characters).";
+    return newErrors;
+  };
+
+  const buildWhatsAppMessage = () => {
+    const lines = [
+      `✨ *New Custom Order Inquiry — ShaRiz Kreations*`,
+      ``,
+      `👤 *Name:* ${form.name}`,
+      `📧 *Email:* ${form.email}`,
+      form.phone ? `📱 *Phone:* ${form.phone}` : null,
+      `🎨 *Product Type:* ${form.type}`,
+      form.budget ? `💰 *Budget:* ${form.budget}` : null,
+      form.timeline ? `📅 *Timeline:* ${form.timeline}` : null,
+      ``,
+      `💬 *Vision / Details:*`,
+      form.message,
+      form.file ? `\n📎 *Reference Image:* ${form.file.name} (attached separately)` : null,
+    ].filter(Boolean);
+    return lines.join("\n");
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      // Scroll to first error
+      const firstErrorKey = Object.keys(validationErrors)[0];
+      document.getElementById(`field-${firstErrorKey}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    setErrors({});
     setSubmitted(true);
-    toast.success("Your custom order request has been sent! Shaz will be in touch soon. ✨", { style: { background: "#1a1a1a", border: "1px solid #D4AF37", color: "#EDE8DC" } });
+    toast.success("Your custom order request has been sent! Shaz will be in touch soon. ✨", {
+      style: { background: "#1a1a1a", border: "1px solid #D4AF37", color: "#EDE8DC" },
+    });
+    // Open WhatsApp with pre-filled message
+    setTimeout(() => {
+      window.open(getWhatsAppLink(buildWhatsAppMessage()), "_blank");
+    }, 600);
   };
 
   const handleFile = (file: File) => {
-    if (file && file.type.startsWith("image/")) setForm((f) => ({ ...f, file }));
-    else toast.error("Please upload an image file.", { style: { background: "#1a1a1a", border: "1px solid #D4AF37", color: "#EDE8DC" } });
+    if (file && file.type.startsWith("image/")) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("Image must be under 10MB.", { style: { background: "#1a1a1a", border: "1px solid #D4AF37", color: "#EDE8DC" } });
+        return;
+      }
+      setForm((f) => ({ ...f, file }));
+    } else {
+      toast.error("Please upload an image file (JPG, PNG, WEBP).", { style: { background: "#1a1a1a", border: "1px solid #D4AF37", color: "#EDE8DC" } });
+    }
   };
 
-  const productTypes = ["Resin Coasters (Set of 4)", "Canvas Wall Art", "Serving Tray", "Piggy Bank / Desk Decor", "Islamic Calligraphy Art", "Wedding/Event Decor", "Custom Gift Set", "Other"];
+  const inputClass = "w-full px-4 py-3 text-sm text-cream/80 outline-none focus:border-[#D4AF37] transition-colors";
+  const inputStyle = { background: "oklch(0.10 0.005 60)", border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif" };
+  const errorInputStyle = { background: "oklch(0.10 0.005 60)", border: "1px solid rgba(220,50,50,0.6)", fontFamily: "'Jost', sans-serif" };
+  const labelClass = "text-[10px] tracking-widest uppercase text-cream/50 block mb-2";
+  const errorClass = "text-red-400 text-xs mt-1.5";
 
   return (
     <section id="custom-orders" className="py-24 md:py-32 relative overflow-hidden">
@@ -677,6 +809,7 @@ function CustomOrdersSection() {
       </div>
       <div className="container relative z-10">
         <div className="grid lg:grid-cols-2 gap-16 items-start">
+          {/* Left — Info */}
           <div>
             <p className="section-label mb-4">Bespoke Creations</p>
             <h2 className="text-5xl md:text-6xl font-light mb-6 leading-tight" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#EDE8DC" }}>
@@ -703,81 +836,477 @@ function CustomOrdersSection() {
                 </div>
               ))}
             </div>
+
+            {/* How It Works */}
+            <div className="p-6 mb-8" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
+              <p className="text-[10px] tracking-widest uppercase text-[#D4AF37] mb-4" style={{ fontFamily: "'Jost', sans-serif" }}>How It Works</p>
+              <div className="space-y-3">
+                {[
+                  { step: "01", text: "Fill in the form with your vision and details" },
+                  { step: "02", text: "Shaz reviews and sends a custom quote within 24–48 hrs" },
+                  { step: "03", text: "Approve the design and confirm your order" },
+                  { step: "04", text: "Your piece is handcrafted and delivered with love" },
+                ].map((s) => (
+                  <div key={s.step} className="flex items-start gap-3">
+                    <span className="text-[#D4AF37]/40 text-xs font-bold shrink-0 mt-0.5" style={{ fontFamily: "'Jost', sans-serif" }}>{s.step}</span>
+                    <p className="text-cream/60 text-sm" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>{s.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <a href={getWhatsAppLink("Hi Shaz! I'd like to discuss a custom resin art order.")} target="_blank" rel="noopener noreferrer" className="btn-gold inline-flex items-center gap-2">
-              <MessageCircle size={14} /> Chat on WhatsApp
+              <MessageCircle size={14} /> Chat on WhatsApp Instead
             </a>
           </div>
 
+          {/* Right — Form */}
           <div className="p-8 md:p-10" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
             {submitted ? (
-              <div className="text-center py-12">
-                <div className="text-5xl mb-4">✨</div>
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }} className="text-center py-12">
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: "spring", stiffness: 200 }} className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)" }}>
+                  <Check size={28} className="text-[#0d0d0d]" />
+                </motion.div>
                 <h3 className="text-3xl font-light text-cream mb-3" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Request Received!</h3>
-                <p className="text-cream/60 text-sm mb-6" style={{ fontFamily: "'Jost', sans-serif" }}>Shaz will reach out within 24–48 hours to discuss your custom piece.</p>
-                <a href={getWhatsAppLink("Hi Shaz! I just submitted a custom order request.")} target="_blank" rel="noopener noreferrer" className="btn-gold inline-flex items-center gap-2 mb-4">
+                <p className="text-cream/60 text-sm mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>
+                  Thank you, <span className="text-[#D4AF37]">{form.name}</span>! Shaz will review your request and reach out within 24–48 hours.
+                </p>
+                <p className="text-cream/40 text-xs mb-8" style={{ fontFamily: "'Jost', sans-serif" }}>
+                  WhatsApp has been opened with your details pre-filled for a faster response.
+                </p>
+                <a href={getWhatsAppLink(buildWhatsAppMessage())} target="_blank" rel="noopener noreferrer" className="btn-gold inline-flex items-center gap-2 mb-4">
                   <MessageCircle size={14} /> Follow Up on WhatsApp
                 </a>
                 <br />
-                <button onClick={() => setSubmitted(false)} className="btn-outline-gold mt-4">Submit Another Request</button>
-              </div>
+                <button onClick={() => { setSubmitted(false); setForm({ name: "", email: "", phone: "", type: "", budget: "", timeline: "", message: "", file: null }); }} className="btn-outline-gold mt-4">
+                  Submit Another Request
+                </button>
+              </motion.div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <h3 className="text-2xl font-light text-cream mb-6" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Request a Custom Piece</h3>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] tracking-widest uppercase text-cream/50 block mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Your Name *</label>
-                    <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-3 text-sm text-cream/80 outline-none focus:border-[#D4AF37] transition-colors" style={{ background: "oklch(0.10 0.005 60)", border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif" }} placeholder="Your name" />
+              <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                <div className="mb-6">
+                  <h3 className="text-2xl font-light text-cream mb-1" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Request a Custom Piece</h3>
+                  <p className="text-cream/40 text-xs" style={{ fontFamily: "'Jost', sans-serif" }}>Fields marked * are required</p>
+                </div>
+
+                {/* Name + Email */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div id="field-name">
+                    <label className={labelClass} style={{ fontFamily: "'Jost', sans-serif" }}>Your Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={form.name}
+                      onChange={(e) => { setForm({ ...form, name: e.target.value }); if (errors.name) setErrors({ ...errors, name: "" }); }}
+                      className={inputClass}
+                      style={errors.name ? errorInputStyle : inputStyle}
+                      placeholder="Your name"
+                    />
+                    {errors.name && <p className={errorClass}>{errors.name}</p>}
                   </div>
-                  <div>
-                    <label className="text-[10px] tracking-widest uppercase text-cream/50 block mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Email *</label>
-                    <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-4 py-3 text-sm text-cream/80 outline-none focus:border-[#D4AF37] transition-colors" style={{ background: "oklch(0.10 0.005 60)", border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif" }} placeholder="your@email.com" />
+                  <div id="field-email">
+                    <label className={labelClass} style={{ fontFamily: "'Jost', sans-serif" }}>Email *</label>
+                    <input
+                      type="email"
+                      required
+                      value={form.email}
+                      onChange={(e) => { setForm({ ...form, email: e.target.value }); if (errors.email) setErrors({ ...errors, email: "" }); }}
+                      className={inputClass}
+                      style={errors.email ? errorInputStyle : inputStyle}
+                      placeholder="your@email.com"
+                    />
+                    {errors.email && <p className={errorClass}>{errors.email}</p>}
                   </div>
                 </div>
+
+                {/* Phone */}
                 <div>
-                  <label className="text-[10px] tracking-widest uppercase text-cream/50 block mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Phone (Optional)</label>
-                  <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full px-4 py-3 text-sm text-cream/80 outline-none focus:border-[#D4AF37] transition-colors" style={{ background: "oklch(0.10 0.005 60)", border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif" }} placeholder="+1 (000) 000-0000" />
+                  <label className={labelClass} style={{ fontFamily: "'Jost', sans-serif" }}>
+                    <span className="inline-flex items-center gap-1.5"><Phone size={10} /> Phone (Optional)</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className={inputClass}
+                    style={inputStyle}
+                    placeholder="+1 (000) 000-0000"
+                  />
                 </div>
-                <div>
-                  <label className="text-[10px] tracking-widest uppercase text-cream/50 block mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Product Type *</label>
-                  <select required value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="w-full px-4 py-3 text-sm text-cream/80 outline-none focus:border-[#D4AF37] transition-colors" style={{ background: "oklch(0.10 0.005 60)", border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif" }}>
-                    <option value="">Select a product type</option>
+
+                {/* Product Type */}
+                <div id="field-type">
+                  <label className={labelClass} style={{ fontFamily: "'Jost', sans-serif" }}>Product Type *</label>
+                  <select
+                    required
+                    value={form.type}
+                    onChange={(e) => { setForm({ ...form, type: e.target.value }); if (errors.type) setErrors({ ...errors, type: "" }); }}
+                    className={inputClass}
+                    style={errors.type ? errorInputStyle : inputStyle}
+                  >
+                    <option value="">Select a product type...</option>
                     {productTypes.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
+                  {errors.type && <p className={errorClass}>{errors.type}</p>}
                 </div>
-                <div>
-                  <label className="text-[10px] tracking-widest uppercase text-cream/50 block mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Your Vision *</label>
-                  <textarea required rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="w-full px-4 py-3 text-sm text-cream/80 outline-none focus:border-[#D4AF37] transition-colors resize-none" style={{ background: "oklch(0.10 0.005 60)", border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif" }} placeholder="Describe your dream piece — colors, size, occasion, special inclusions..." />
+
+                {/* Budget + Timeline */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass} style={{ fontFamily: "'Jost', sans-serif" }}>
+                      <span className="inline-flex items-center gap-1.5"><DollarSign size={10} /> Budget Range</span>
+                    </label>
+                    <select
+                      value={form.budget}
+                      onChange={(e) => setForm({ ...form, budget: e.target.value })}
+                      className={inputClass}
+                      style={inputStyle}
+                    >
+                      <option value="">Select budget...</option>
+                      {budgetRanges.map((b) => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass} style={{ fontFamily: "'Jost', sans-serif" }}>
+                      <span className="inline-flex items-center gap-1.5"><Calendar size={10} /> Timeline</span>
+                    </label>
+                    <select
+                      value={form.timeline}
+                      onChange={(e) => setForm({ ...form, timeline: e.target.value })}
+                      className={inputClass}
+                      style={inputStyle}
+                    >
+                      <option value="">Select timeline...</option>
+                      {timelines.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
                 </div>
+
+                {/* Vision */}
+                <div id="field-message">
+                  <label className={labelClass} style={{ fontFamily: "'Jost', sans-serif" }}>Your Vision *</label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={form.message}
+                    onChange={(e) => { setForm({ ...form, message: e.target.value }); if (errors.message) setErrors({ ...errors, message: "" }); }}
+                    className={`${inputClass} resize-none`}
+                    style={errors.message ? errorInputStyle : inputStyle}
+                    placeholder="Describe your dream piece — colors, size, occasion, special inclusions (flowers, gold leaf, calligraphy)..."
+                  />
+                  {errors.message && <p className={errorClass}>{errors.message}</p>}
+                  <p className="text-cream/25 text-[10px] mt-1" style={{ fontFamily: "'Jost', sans-serif" }}>{form.message.length} characters</p>
+                </div>
+
+                {/* Reference Image Upload */}
                 <div>
-                  <label className="text-[10px] tracking-widest uppercase text-cream/50 block mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Reference Image (Optional)</label>
-                  <div className={`relative border-2 border-dashed p-6 text-center cursor-pointer transition-all duration-300 ${dragOver ? "border-[#D4AF37] bg-[#D4AF37]/10" : "border-[#D4AF37]/30 hover:border-[#D4AF37]/60"}`} onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(e) => { e.preventDefault(); setDragOver(false); const file = e.dataTransfer.files[0]; if (file) handleFile(file); }} onClick={() => fileInputRef.current?.click()}>
+                  <label className={labelClass} style={{ fontFamily: "'Jost', sans-serif" }}>Reference Image (Optional)</label>
+                  <div
+                    className={`relative border-2 border-dashed p-5 text-center cursor-pointer transition-all duration-300 ${dragOver ? "border-[#D4AF37] bg-[#D4AF37]/10" : "border-[#D4AF37]/30 hover:border-[#D4AF37]/60"}`}
+                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={(e) => { e.preventDefault(); setDragOver(false); const file = e.dataTransfer.files[0]; if (file) handleFile(file); }}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
                     <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFile(file); }} />
                     {form.file ? (
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 shrink-0 overflow-hidden border border-[#D4AF37]/30">
+                          <div className="w-14 h-14 shrink-0 overflow-hidden border border-[#D4AF37]/30">
                             <img src={URL.createObjectURL(form.file)} alt="Preview" className="w-full h-full object-cover" />
                           </div>
                           <div className="text-left">
-                            <p className="text-cream/80 text-xs font-medium" style={{ fontFamily: "'Jost', sans-serif" }}>{form.file.name}</p>
+                            <p className="text-cream/80 text-xs font-medium truncate max-w-[140px]" style={{ fontFamily: "'Jost', sans-serif" }}>{form.file.name}</p>
                             <p className="text-cream/40 text-xs" style={{ fontFamily: "'Jost', sans-serif" }}>{(form.file.size / 1024).toFixed(0)} KB</p>
+                            <p className="text-[#D4AF37] text-[10px] mt-0.5" style={{ fontFamily: "'Jost', sans-serif" }}>✓ Image ready</p>
                           </div>
                         </div>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); setForm((f) => ({ ...f, file: null })); }} className="text-cream/40 hover:text-[#D4AF37] transition-colors"><X size={16} /></button>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); setForm((f) => ({ ...f, file: null })); }} className="text-cream/40 hover:text-red-400 transition-colors shrink-0">
+                          <X size={16} />
+                        </button>
                       </div>
                     ) : (
                       <div>
                         <Upload size={20} className="text-[#D4AF37]/60 mx-auto mb-2" />
                         <p className="text-cream/50 text-xs" style={{ fontFamily: "'Jost', sans-serif" }}>Drop an image here or <span className="text-[#D4AF37]">click to browse</span></p>
-                        <p className="text-cream/30 text-[10px] mt-1" style={{ fontFamily: "'Jost', sans-serif" }}>JPG, PNG, WEBP up to 10MB</p>
+                        <p className="text-cream/30 text-[10px] mt-1" style={{ fontFamily: "'Jost', sans-serif" }}>JPG, PNG, WEBP — up to 10MB</p>
                       </div>
                     )}
                   </div>
                 </div>
-                <button type="submit" className="btn-gold w-full">Send Custom Order Request</button>
+
+                {/* Submit */}
+                <button type="submit" className="btn-gold w-full flex items-center justify-center gap-2 mt-2">
+                  <MessageCircle size={14} /> Send Request &amp; Open WhatsApp
+                </button>
+                <p className="text-cream/25 text-[10px] text-center" style={{ fontFamily: "'Jost', sans-serif" }}>
+                  Submitting will open WhatsApp with your details pre-filled for Shaz.
+                </p>
               </form>
             )}
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── FAQ Section ─────────────────────────────────────────────────────────────────
+const FAQ_ITEMS = [
+  {
+    q: "How Long Does a Custom Order Take?",
+    a: "Most pieces take 7–14 business days to complete, depending on complexity and size. Rush orders (within 3–5 days) are available for an additional fee — just mention it in your request.",
+  },
+  {
+    q: "Do You Ship Across Canada?",
+    a: "Yes! We ship Canada-wide. Shipping is calculated at checkout based on your location and the size of your order. International shipping is available on request — message Shaz on WhatsApp for a quote.",
+  },
+  {
+    q: "How Do I Care for My Resin Piece?",
+    a: "Resin art is durable but should be kept away from direct sunlight for extended periods to prevent yellowing. Wipe clean with a soft, damp cloth. Avoid harsh chemicals or abrasive cleaners. Coasters should not be used with extremely hot items.",
+  },
+  {
+    q: "Can I Request Specific Colors or Inclusions?",
+    a: "Absolutely! Custom orders are fully tailored to you. You can request specific color palettes, inclusions (pressed flowers, gold leaf, glitter, shells, calligraphy), sizes, and shapes. Share your inspiration images in the order form.",
+  },
+  {
+    q: "What Is Your Refund or Exchange Policy?",
+    a: "Because every piece is handcrafted to order, we do not accept returns on custom pieces. However, if your item arrives damaged, please contact Shaz within 48 hours with photos and we will make it right.",
+  },
+  {
+    q: "Do You Take Bulk or Corporate Orders?",
+    a: "Yes! We love creating bulk gift sets for weddings, corporate events, and special occasions. Discounts are available for orders of 10+ pieces. Message Shaz on WhatsApp to discuss your requirements.",
+  },
+];
+
+function FAQSection() {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <section id="faq" className="py-24 md:py-32 relative" style={{ background: "oklch(0.12 0.006 60)" }}>
+      <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "radial-gradient(ellipse at 80% 50%, #D4AF37 0%, transparent 50%)" }} />
+      <div className="container relative z-10">
+        <div className="text-center mb-16">
+          <p className="section-label mb-4">Questions Answered</p>
+          <h2 className="text-5xl md:text-6xl font-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#EDE8DC" }}>
+            Frequently Asked <span className="italic text-[#D4AF37]">Questions</span>
+          </h2>
+          <div className="gold-divider" />
+        </div>
+        <div className="max-w-3xl mx-auto space-y-3">
+          {FAQ_ITEMS.map((item, i) => (
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.07 }} style={{ background: "oklch(0.14 0.006 60)", border: open === i ? "1px solid rgba(212,175,55,0.5)" : "1px solid rgba(212,175,55,0.15)" }}>
+              <button
+                className="w-full flex items-center justify-between gap-4 p-6 text-left"
+                onClick={() => setOpen(open === i ? null : i)}
+              >
+                <span className="text-cream/90 font-medium text-sm md:text-base" style={{ fontFamily: "'Jost', sans-serif" }}>{item.q}</span>
+                <span className="text-[#D4AF37] shrink-0 text-lg transition-transform duration-300" style={{ transform: open === i ? "rotate(45deg)" : "rotate(0deg)" }}>+</span>
+              </button>
+              <AnimatePresence>
+                {open === i && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }} style={{ overflow: "hidden" }}>
+                    <div className="px-6 pb-6 pt-0">
+                      <div className="gold-divider mb-4" style={{ margin: "0 0 1rem 0" }} />
+                      <p className="text-cream/60 text-sm leading-relaxed" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>{item.a}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ))}
+        </div>
+        <div className="text-center mt-12">
+          <p className="text-cream/40 text-sm mb-4" style={{ fontFamily: "'Jost', sans-serif" }}>Still have questions? Shaz is happy to help.</p>
+          <a href={getWhatsAppLink("Hi Shaz! I have a question about your resin art.")} target="_blank" rel="noopener noreferrer" className="btn-gold inline-flex items-center gap-2">
+            <MessageCircle size={14} /> Ask on WhatsApp
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Book a Consultation Section ─────────────────────────────────────────────
+function BookConsultationSection() {
+  const timeSlots = [
+    "Monday – Friday, 10am – 12pm (MST)",
+    "Monday – Friday, 2pm – 4pm (MST)",
+    "Saturday, 11am – 1pm (MST)",
+    "Saturday, 3pm – 5pm (MST)",
+  ];
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const handleBook = () => {
+    const msg = selected
+      ? `Hi Shaz! I'd like to book a free 15-minute consultation.\n\n🕐 *Preferred time:* ${selected}\n\nPlease confirm if this slot is available. Thank you!`
+      : `Hi Shaz! I'd like to book a free 15-minute consultation. Please let me know your available times. Thank you!`;
+    window.open(getWhatsAppLink(msg), "_blank");
+  };
+
+  return (
+    <section id="consultation" className="py-24 md:py-32 relative overflow-hidden" style={{ background: "oklch(0.11 0.006 60)" }}>
+      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: "radial-gradient(ellipse at 20% 50%, rgba(212,175,55,0.07) 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, rgba(212,175,55,0.04) 0%, transparent 60%)" }} />
+      <div className="container relative z-10">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-14">
+            <p className="section-label mb-4">Free Consultation</p>
+            <h2 className="text-5xl md:text-6xl font-light mb-4" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#EDE8DC" }}>
+              Book a <span className="italic text-[#D4AF37]">15-Minute Call</span>
+            </h2>
+            <p className="text-cream/50 max-w-xl mx-auto text-sm leading-relaxed" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>
+              Not sure what to order? Chat with Shaz directly — discuss your vision, get colour suggestions, and receive a personalised quote. No commitment required.
+            </p>
+            <div className="gold-divider" />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 items-start">
+            {/* Left: What to expect */}
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="p-8" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
+              <h3 className="text-xl font-light mb-6 text-cream" style={{ fontFamily: "'Cormorant Garamond', serif" }}>What We'll Cover</h3>
+              <ul className="space-y-4">
+                {[
+                  { icon: "✦", text: "Your vision, theme, and colour palette" },
+                  { icon: "✦", text: "Product type, size, and customisation options" },
+                  { icon: "✦", text: "Timeline and delivery details" },
+                  { icon: "✦", text: "Personalised pricing and quote" },
+                  { icon: "✦", text: "Any questions about resin art care" },
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <span className="text-[#D4AF37] text-xs mt-1">{item.icon}</span>
+                    <span className="text-cream/60 text-sm" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>{item.text}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8 pt-6" style={{ borderTop: "1px solid rgba(212,175,55,0.15)" }}>
+                <p className="text-cream/40 text-xs" style={{ fontFamily: "'Jost', sans-serif" }}>Consultations are held via WhatsApp call or voice message. Available in English and Urdu.</p>
+              </div>
+            </motion.div>
+
+            {/* Right: Time slot picker */}
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: 0.1 }}>
+              <h3 className="text-xl font-light mb-4 text-cream" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Choose a Preferred Time</h3>
+              <p className="text-cream/40 text-xs mb-5" style={{ fontFamily: "'Jost', sans-serif" }}>Select a slot and Shaz will confirm availability via WhatsApp.</p>
+              <div className="space-y-3 mb-6">
+                {timeSlots.map((slot) => (
+                  <button
+                    key={slot}
+                    onClick={() => setSelected(slot === selected ? null : slot)}
+                    className="w-full text-left px-5 py-4 text-sm transition-all duration-200"
+                    style={{
+                      background: selected === slot ? "rgba(212,175,55,0.12)" : "oklch(0.14 0.006 60)",
+                      border: selected === slot ? "1px solid rgba(212,175,55,0.6)" : "1px solid rgba(212,175,55,0.15)",
+                      color: selected === slot ? "#D4AF37" : "rgba(237,232,220,0.6)",
+                      fontFamily: "'Jost', sans-serif",
+                      fontWeight: 300,
+                    }}
+                  >
+                    <span className="mr-2" style={{ color: selected === slot ? "#D4AF37" : "rgba(212,175,55,0.3)" }}>{selected === slot ? "◆" : "◇"}</span>
+                    {slot}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={handleBook}
+                className="w-full btn-gold flex items-center justify-center gap-2"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Book via WhatsApp
+              </button>
+              <p className="text-cream/30 text-xs text-center mt-3" style={{ fontFamily: "'Jost', sans-serif" }}>Free · No commitment · Responds within 24 hours</p>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Testimonial Submission Section ────────────────────────────────────────────
+function TestimonialSubmitSection() {
+  const [form, setForm] = useState({ name: "", review: "", stars: 5, product: "" });
+  const [submitted, setSubmitted] = useState(false);
+
+  const productOptions = [
+    "Resin Coasters", "Canvas Wall Art", "Serving Tray", "Islamic Calligraphy Art",
+    "Piggy Bank / Decor", "Custom Gift Set", "Wedding / Event Decor", "Other",
+  ];
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.review.trim()) return;
+    const stars = "⭐".repeat(form.stars);
+    const msg = [
+      `✨ *New Review for ShaRiz Kreations*`,
+      ``,
+      `👤 *Name:* ${form.name}`,
+      form.product ? `🎨 *Product:* ${form.product}` : "",
+      `${stars} *Rating:* ${form.stars}/5`,
+      ``,
+      `💬 *Review:*`,
+      form.review,
+    ].filter(Boolean).join("\n");
+    window.open(getWhatsAppLink(msg), "_blank");
+    setSubmitted(true);
+  };
+
+  return (
+    <section className="py-20 relative" style={{ background: "oklch(0.13 0.006 60)" }}>
+      <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "radial-gradient(ellipse at 50% 0%, #D4AF37 0%, transparent 60%)" }} />
+      <div className="container relative z-10">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="section-label mb-4">Share Your Experience</p>
+            <h2 className="text-4xl md:text-5xl font-light mb-3" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#EDE8DC" }}>
+              Leave a <span className="italic text-[#D4AF37]">Review</span>
+            </h2>
+            <p className="text-cream/40 text-sm" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Loved your piece? Your kind words help other customers discover ShaRiz Kreations.</p>
+            <div className="gold-divider" />
+          </div>
+
+          {submitted ? (
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-16 px-8" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.3)" }}>
+              <div className="text-4xl mb-4">✦</div>
+              <h3 className="text-2xl font-light text-cream mb-2" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Thank You!</h3>
+              <p className="text-cream/50 text-sm" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Your review has been sent to Shaz via WhatsApp. It means the world!</p>
+              <button onClick={() => setSubmitted(false)} className="mt-6 btn-outline-gold text-xs">Submit Another Review</button>
+            </motion.div>
+          ) : (
+            <motion.form initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} onSubmit={handleSubmit} className="p-8 space-y-5" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
+              {/* Star rating */}
+              <div>
+                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-3" style={{ fontFamily: "'Jost', sans-serif" }}>Your Rating</label>
+                <div className="flex gap-2">
+                  {[1,2,3,4,5].map((s) => (
+                    <button key={s} type="button" onClick={() => setForm(f => ({ ...f, stars: s }))} className="transition-transform hover:scale-110 active:scale-95">
+                      <Star size={24} fill={s <= form.stars ? "#D4AF37" : "none"} className={s <= form.stars ? "text-[#D4AF37]" : "text-cream/20"} />
+                    </button>
+                  ))}
+                  <span className="text-cream/40 text-sm self-center ml-2" style={{ fontFamily: "'Jost', sans-serif" }}>{form.stars}/5</span>
+                </div>
+              </div>
+              {/* Name */}
+              <div>
+                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Your Name *</label>
+                <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Sarah M." className="w-full px-4 py-3 text-sm text-cream bg-transparent outline-none transition-colors" style={{ border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif", fontWeight: 300 }} onFocus={e => e.target.style.borderColor = "rgba(212,175,55,0.6)"} onBlur={e => e.target.style.borderColor = "rgba(212,175,55,0.2)"} />
+              </div>
+              {/* Product */}
+              <div>
+                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Product Purchased (Optional)</label>
+                <select value={form.product} onChange={e => setForm(f => ({ ...f, product: e.target.value }))} className="w-full px-4 py-3 text-sm text-cream/70 bg-transparent outline-none" style={{ border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif", fontWeight: 300, background: "oklch(0.14 0.006 60)" }}>
+                  <option value="">Select a product...</option>
+                  {productOptions.map(p => <option key={p} value={p} style={{ background: "#1a1a14" }}>{p}</option>)}
+                </select>
+              </div>
+              {/* Review text */}
+              <div>
+                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Your Review *</label>
+                <textarea required value={form.review} onChange={e => setForm(f => ({ ...f, review: e.target.value }))} rows={4} placeholder="Tell others about your experience with ShaRiz Kreations..." className="w-full px-4 py-3 text-sm text-cream bg-transparent outline-none resize-none transition-colors" style={{ border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif", fontWeight: 300 }} onFocus={e => e.target.style.borderColor = "rgba(212,175,55,0.6)"} onBlur={e => e.target.style.borderColor = "rgba(212,175,55,0.2)"} />
+              </div>
+              <button type="submit" className="w-full btn-gold flex items-center justify-center gap-2">
+                <Heart size={13} /> Submit Review
+              </button>
+            </motion.form>
+          )}
         </div>
       </div>
     </section>
@@ -870,7 +1399,11 @@ function Footer() {
         </div>
         <div className="mt-8 pt-6 border-t flex flex-col md:flex-row items-center justify-between gap-2" style={{ borderColor: "rgba(212,175,55,0.1)" }}>
           <p className="text-cream/30 text-xs" style={{ fontFamily: "'Jost', sans-serif" }}>© 2026 ShaRiz Kreations. All rights reserved.</p>
-          <p className="text-cream/30 text-xs" style={{ fontFamily: "'Jost', sans-serif" }}>Handcrafted with ♥ · sharizkreations.com</p>
+          <div className="flex items-center gap-4">
+            <Link href="/care-instructions" className="text-cream/30 text-xs hover:text-[#D4AF37] transition-colors" style={{ fontFamily: "'Jost', sans-serif" }}>Care Instructions</Link>
+            <span className="text-cream/20 text-xs">·</span>
+            <p className="text-cream/30 text-xs" style={{ fontFamily: "'Jost', sans-serif" }}>Handcrafted with ♥ · sharizkreations.com</p>
+          </div>
         </div>
       </div>
     </footer>
@@ -898,6 +1431,9 @@ export default function Home() {
       <GallerySection />
       <TestimonialsSection />
       <CustomOrdersSection />
+      <FAQSection />
+      <BookConsultationSection />
+      <TestimonialSubmitSection />
       <InstagramSection />
       <ContactSection />
       <Footer />
