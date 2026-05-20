@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-and-deploy:
     name: Build React app and FTP deploy to Bluehost
@@ -16,29 +19,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Set up Node.js 20
+      # 2. Install pnpm (version read from package.json packageManager field)
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      # 3. Set up Node.js 22
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      # 3. Install pnpm
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
+          node-version: '22'
+          cache: 'pnpm'
 
       # 4. Install dependencies
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       # 5. Build the production bundle (outputs to dist/public/)
       - name: Build
         run: pnpm build
 
-      # 6. Deploy dist/public/ to Bluehost via FTP
-      #    Bluehost uses Explicit FTPS on port 21
-      #    Secrets in GitHub → Settings → Secrets → Actions:
+      # 6. Deploy dist/public/ to Bluehost via explicit FTPS (port 21)
+      #    Secrets required in GitHub → Settings → Secrets → Actions:
       #      FTP_HOST     = ftp.esa.cun.mybluehost.me
       #      FTP_USERNAME = SHARIZ@website-7b890dc7.esa.cun.mybluehost.me
       #      FTP_PASSWORD = your Bluehost/cPanel password

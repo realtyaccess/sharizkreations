@@ -132,6 +132,7 @@ const PRODUCTS = [
     price: "From $50 CAD",
     images: [ALL_PHOTOS[1], ALL_PHOTOS[2], ALL_PHOTOS[3], ALL_PHOTOS[4]],
     tag: "Bestseller",
+    availability: "Taking Orders",
     waMessage: "Hi Shaz! I'm interested in your Resin Coasters. Could you share more details and availability?",
   },
   {
@@ -142,6 +143,7 @@ const PRODUCTS = [
     price: "From $200 CAD",
     images: [ALL_PHOTOS[5], ALL_PHOTOS[6], ALL_PHOTOS[7], ALL_PHOTOS[8]],
     tag: "Statement Piece",
+    availability: "Limited Stock",
     waMessage: "Hi Shaz! I'm interested in your Canvas Wall Art. Could you share more details?",
   },
   {
@@ -152,6 +154,7 @@ const PRODUCTS = [
     price: "From $110 CAD",
     images: [ALL_PHOTOS[9], ALL_PHOTOS[10], ALL_PHOTOS[11], ALL_PHOTOS[12]],
     tag: "Luxury",
+    availability: "Taking Orders",
     waMessage: "Hi Shaz! I'm interested in your Resin Serving Trays. Could you share more details?",
   },
   {
@@ -162,6 +165,7 @@ const PRODUCTS = [
     price: "From $150 CAD",
     images: [ALL_PHOTOS[13], ALL_PHOTOS[14], ALL_PHOTOS[15], ALL_PHOTOS[17]],
     tag: "Spiritual",
+    availability: "Taking Orders",
     waMessage: "Hi Shaz! I'm interested in your Islamic Calligraphy Art. Could you share more details?",
   },
   {
@@ -172,6 +176,7 @@ const PRODUCTS = [
     price: "From $60 CAD",
     images: [ALL_PHOTOS[18], ALL_PHOTOS[19], ALL_PHOTOS[20], ALL_PHOTOS[21]],
     tag: "Fan Favourite",
+    availability: "Limited Stock",
     waMessage: "Hi Shaz! I'm interested in your Resin Piggy Banks & Decor. Could you share more details?",
   },
   {
@@ -182,6 +187,7 @@ const PRODUCTS = [
     price: "Custom Quote",
     images: [ALL_PHOTOS[22], ALL_PHOTOS[23], ALL_PHOTOS[24], ALL_PHOTOS[25]],
     tag: "Bespoke",
+    availability: "Always Available",
     waMessage: "Hi Shaz! I'd like to discuss a custom resin art order. Can we chat?",
   },
 ];
@@ -486,8 +492,19 @@ function ProductsSection() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {PRODUCTS.map((product, i) => (
             <motion.div key={product.id} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: i * 0.1 }} className="product-card cursor-pointer" onClick={() => { setSelected(product); setActiveImg(0); }}>
-              <div className="card-img aspect-square">
+              <div className="card-img aspect-square relative">
                 <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+                {product.availability && (
+                  <span className={`absolute top-3 left-3 text-[9px] tracking-widest uppercase px-2 py-1 font-medium ${
+                    product.availability === "Limited Stock"
+                      ? "bg-amber-900/80 text-amber-300 border border-amber-500/40"
+                      : product.availability === "Always Available"
+                      ? "bg-emerald-900/80 text-emerald-300 border border-emerald-500/40"
+                      : "bg-[#1a1a0e]/80 text-[#D4AF37] border border-[#D4AF37]/40"
+                  }`} style={{ fontFamily: "'Jost', sans-serif", backdropFilter: "blur(4px)" }}>
+                    {product.availability === "Limited Stock" ? "⚡ Limited Stock" : product.availability === "Always Available" ? "✓ Always Available" : "✦ Taking Orders"}
+                  </span>
+                )}
               </div>
               <div className="p-6">
                 <div className="flex justify-between items-start mb-2">
@@ -1264,11 +1281,22 @@ function TestimonialSubmitSection() {
           </div>
 
           {submitted ? (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-16 px-8" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.3)" }}>
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-12 px-8" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.3)" }}>
               <div className="text-4xl mb-4">✦</div>
               <h3 className="text-2xl font-light text-cream mb-2" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Thank You!</h3>
-              <p className="text-cream/50 text-sm" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Your review has been sent to Shaz via WhatsApp. It means the world!</p>
-              <button onClick={() => setSubmitted(false)} className="mt-6 btn-outline-gold text-xs">Submit Another Review</button>
+              <p className="text-cream/50 text-sm mb-6" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Your review has been sent to Shaz via WhatsApp. It means the world!</p>
+              <div className="gold-divider" />
+              <p className="text-cream/60 text-sm mb-4 mt-4" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Love your piece? Share it on Instagram and tag us!</p>
+              <a
+                href="https://www.instagram.com/sharizkreations"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs tracking-widest uppercase transition-all hover:opacity-80"
+                style={{ background: "linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)", color: "#fff", fontFamily: "'Jost', sans-serif" }}
+              >
+                <Instagram size={14} /> Tag @sharizkreations
+              </a>
+              <button onClick={() => setSubmitted(false)} className="mt-4 block mx-auto btn-outline-gold text-xs">Submit Another Review</button>
             </motion.div>
           ) : (
             <motion.form initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} onSubmit={handleSubmit} className="p-8 space-y-5" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
@@ -1308,6 +1336,57 @@ function TestimonialSubmitSection() {
             </motion.form>
           )}
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Refer a Friend Section ──────────────────────────────────────────────────
+function ReferAFriendSection() {
+  const [copied, setCopied] = useState(false);
+  const referralUrl = "https://sharizkreations.com";
+  const referralMsg = `I just ordered from ShaRiz Kreations and I'm obsessed! 😍 Shaz creates the most stunning handcrafted resin art — coasters, wall art, trays, and more. Check her out: ${referralUrl}`;
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(referralUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
+
+  return (
+    <section className="py-20 relative overflow-hidden" style={{ background: "oklch(0.11 0.006 60)" }}>
+      <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "radial-gradient(ellipse at 50% 100%, #D4AF37 0%, transparent 60%)" }} />
+      <div className="container relative z-10">
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="max-w-2xl mx-auto text-center">
+          <p className="section-label mb-4">Spread the Love</p>
+          <h2 className="text-4xl md:text-5xl font-light mb-3" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#EDE8DC" }}>
+            Refer a <span className="italic text-[#D4AF37]">Friend</span>
+          </h2>
+          <p className="text-cream/40 text-sm mb-8" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Know someone who would love handcrafted resin art? Share the magic — send them a WhatsApp message or copy the link below.</p>
+          <div className="gold-divider" />
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(referralMsg)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-gold flex items-center justify-center gap-2"
+            >
+              <MessageCircle size={14} /> Share via WhatsApp
+            </a>
+            <button
+              onClick={copyLink}
+              className="btn-outline-gold flex items-center justify-center gap-2 transition-all"
+            >
+              {copied ? (
+                <><span className="text-emerald-400">✓</span> Link Copied!</>
+              ) : (
+                <><span className="text-[#D4AF37]">⎘</span> Copy Link</>
+              )}
+            </button>
+          </div>
+          <p className="text-cream/20 text-xs mt-6" style={{ fontFamily: "'Jost', sans-serif" }}>sharizkreations.com</p>
+        </motion.div>
       </div>
     </section>
   );
@@ -1434,6 +1513,7 @@ export default function Home() {
       <FAQSection />
       <BookConsultationSection />
       <TestimonialSubmitSection />
+      <ReferAFriendSection />
       <InstagramSection />
       <ContactSection />
       <Footer />
