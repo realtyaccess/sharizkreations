@@ -1,0 +1,32 @@
+name: Debug SSH Access
+on:
+  workflow_dispatch:
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+jobs:
+  debug-ssh:
+    name: SSH into server to find document root
+    runs-on: ubuntu-latest
+    steps:
+      - name: Try SSH with FTP password
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          # Install sshpass
+          sudo apt-get install -y sshpass
+          
+          # Extract just the hostname from FTP_HOST (remove port if any)
+          SSH_HOST=$(echo "$FTP_HOST" | cut -d: -f1)
+          # Try SSH with FTP credentials
+          echo "Trying SSH with FTP credentials..."
+          sshpass -p "$FTP_PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 \
+            -p 22 "${FTP_USER%%@*}@$SSH_HOST" \
+            "echo 'SSH_SUCCESS'; pwd; ls ~/public_html/ 2>/dev/null | head -10; ls ~/public_html/sharizkreations.com/ 2>/dev/null | head -10" 2>&1 || echo "SSH_FAILED"
+          
+          # Also try with the full FTP username as SSH username
+          echo "Trying SSH with full FTP username..."
+          sshpass -p "$FTP_PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 \
+            -p 22 "$FTP_USER@$SSH_HOST" \
+            "echo 'SSH_SUCCESS2'; pwd; ls" 2>&1 || echo "SSH_FAILED2"
