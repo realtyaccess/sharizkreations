@@ -32,46 +32,9 @@ jobs:
       - name: Install lftp
         run: sudo apt-get install -y lftp
 
-      - name: Deploy via FTP (active mode - bypasses passive port firewall)
+      - name: Deploy via FTP
         env:
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USERNAME }}
           FTP_PASS: ${{ secrets.FTP_PASSWORD }}
-        run: |
-          # Web root for sharizkreations.com (confirmed via cPanel File Manager):
-          # Full path: /home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz/
-          # FTP sub-account home = /home2/esacunmy/
-          # Relative FTP path = /website-7b890dc7.esa.cun.mybluehost.me/shariz/
-          #
-          # Using ACTIVE mode (passive-mode no) to bypass Bluehost passive port firewall.
-          # Active mode: GitHub runner opens a local port, Bluehost connects back to it.
-
-          cat > /tmp/deploy.lftp << 'LFTPEOF'
-set ftp:ssl-allow yes
-set ftp:ssl-force yes
-set ssl:verify-certificate no
-set ftp:passive-mode no
-set net:timeout 60
-set net:max-retries 3
-set net:reconnect-interval-base 5
-set ftp:use-feat yes
-set ftp:use-mdtm yes
-debug 5
-LFTPEOF
-
-          echo "open -u \"$FTP_USER\",\"$FTP_PASS\" ftp://$FTP_HOST" >> /tmp/deploy.lftp
-
-          cat >> /tmp/deploy.lftp << 'LFTPEOF'
-echo "=== Connected to Bluehost FTP (active mode) ==="
-echo "=== Cleaning old files from web root ==="
-rm -rf /website-7b890dc7.esa.cun.mybluehost.me/shariz/assets
-rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/index.html
-rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/.htaccess
-rm -rf /website-7b890dc7.esa.cun.mybluehost.me/shariz/__manus__
-echo "=== Uploading new build ==="
-mirror --reverse --verbose --parallel=1 dist/public/ /website-7b890dc7.esa.cun.mybluehost.me/shariz/
-echo "=== Deploy complete! ==="
-LFTPEOF
-
-          echo "=== Running lftp with debug ==="
-          lftp -f /tmp/deploy.lftp 2>&1
+        run: python3 .github/scripts/deploy_ftp.py
