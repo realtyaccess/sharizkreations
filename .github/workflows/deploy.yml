@@ -32,17 +32,35 @@ jobs:
           sed -i "s|\.css\" crossorigin|.css?v=${BUILD_TS}\" crossorigin|g" dist/public/index.html
           echo "Cache-bust timestamp: ${BUILD_TS}"
           grep -o 'index-[A-Za-z0-9]*\.[jc][ss][^"]*' dist/public/index.html
-      - name: Deploy via FTP to Bluehost
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/public/
-          server-dir: /website-7b890dc7.esa.cun.mybluehost.me/shariz/
-          dangerous-clean-slate: true
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/*.map
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+      - name: Deploy via FTP
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          # Write lftp script to file to avoid shell quoting/escaping issues
+          # Full server path confirmed via cPanel: /home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz
+          # FTP root = /home2/esacunmy/ so FTP path = /website-7b890dc7.esa.cun.mybluehost.me/shariz/
+          cat > /tmp/deploy.lftp << LFTPEOF
+          set ftp:ssl-allow yes
+          set ftp:ssl-force yes
+          set ssl:verify-certificate no
+          set net:timeout 60
+          set net:max-retries 5
+          set net:reconnect-interval-base 5
+          set net:reconnect-interval-multiplier 1
+          set ftp:passive-mode yes
+          set ftp:use-feat no
+          open -u "$FTP_USER","$FTP_PASS" ftp://$FTP_HOST
+          echo "=== Connected to Bluehost FTP ==="
+          echo "=== Cleaning old files... ==="
+          rm -rf /website-7b890dc7.esa.cun.mybluehost.me/shariz/assets
+          rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/index.html
+          rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/.htaccess
+          echo "=== Uploading new build (parallel=1 for reliability)... ==="
+          mirror --reverse --verbose --parallel=1 dist/public/ /website-7b890dc7.esa.cun.mybluehost.me/shariz/
+          echo "=== Deploy complete! ==="
+          LFTPEOF
+          lftp -f /tmp/deploy.lftp
