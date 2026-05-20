@@ -34,33 +34,94 @@ jobs:
           grep -o 'index-[A-Za-z0-9]*\.[jc][ss][^"]*' dist/public/index.html
       - name: Install lftp
         run: sudo apt-get install -y lftp
-      - name: Deploy via FTP
+      - name: Deploy via FTP (using Python script for reliable uploads)
         env:
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USERNAME }}
           FTP_PASS: ${{ secrets.FTP_PASSWORD }}
         run: |
-          # Write lftp script to file to avoid shell quoting/escaping issues
-          # Full server path confirmed via cPanel: /home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz
-          # FTP root = /home2/esacunmy/ so FTP path = /website-7b890dc7.esa.cun.mybluehost.me/shariz/
-          cat > /tmp/deploy.lftp << LFTPEOF
-          set ftp:ssl-allow yes
-          set ftp:ssl-force yes
-          set ssl:verify-certificate no
-          set net:timeout 60
-          set net:max-retries 5
-          set net:reconnect-interval-base 5
-          set net:reconnect-interval-multiplier 1
-          set ftp:passive-mode yes
-          set ftp:use-feat no
-          open -u "$FTP_USER","$FTP_PASS" ftp://$FTP_HOST
-          echo "=== Connected to Bluehost FTP ==="
-          echo "=== Cleaning old files... ==="
-          rm -rf /website-7b890dc7.esa.cun.mybluehost.me/shariz/assets
-          rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/index.html
-          rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/.htaccess
-          echo "=== Uploading new build (parallel=1 for reliability)... ==="
-          mirror --reverse --verbose --parallel=1 dist/public/ /website-7b890dc7.esa.cun.mybluehost.me/shariz/
-          echo "=== Deploy complete! ==="
-          LFTPEOF
-          lftp -f /tmp/deploy.lftp
+          python3 << 'PYEOF'
+          import ftplib
+          import os
+          import ssl
+
+          host = os.environ['FTP_HOST']
+          user = os.environ['FTP_USER']
+          password = os.environ['FTP_PASS']
+          remote_dir = '/website-7b890dc7.esa.cun.mybluehost.me/shariz'
+          local_dir = 'dist/public'
+
+          print(f"Connecting to {host}...")
+
+          # Create SSL context that doesn't verify certificate
+          ctx = ssl.create_default_context()
+          ctx.check_hostname = False
+          ctx.verify_mode = ssl.CERT_NONE
+
+          ftp = ftplib.FTP_TLS(context=ctx)
+          ftp.connect(host, 21, timeout=60)
+          ftp.auth()
+          ftp.login(user, password)
+          ftp.prot_p()  # Switch to protected data channel
+          ftp.set_pasv(True)
+
+          print(f"Connected! Logged in as {user}")
+
+          def delete_remote_dir(ftp, path):
+              """Recursively delete a remote directory"""
+              try:
+                  items = []
+                  ftp.retrlines(f'LIST {path}', items.append)
+                  for item in items:
+                      parts = item.split()
+                      if not parts:
+                          continue
+                      name = parts[-1]
+                      if name in ('.', '..'):
+                          continue
+                      full_path = f"{path}/{name}"
+                      if item.startswith('d'):
+                          delete_remote_dir(ftp, full_path)
+                          try:
+                              ftp.rmd(full_path)
+                              print(f"  Removed dir: {full_path}")
+                          except:
+                              pass
+                      else:
+                          try:
+                              ftp.delete(full_path)
+                              print(f"  Deleted: {full_path}")
+                          except Exception as e:
+                              print(f"  Warning: could not delete {full_path}: {e}")
+              except Exception as e:
+                  print(f"  Note: {path} - {e}")
+
+          def ensure_remote_dir(ftp, path):
+              """Create remote directory if it doesn't exist"""
+              try:
+                  ftp.mkd(path)
+              except:
+                  pass  # Already exists
+
+          def upload_dir(ftp, local_path, remote_path):
+              """Upload a local directory to remote"""
+              ensure_remote_dir(ftp, remote_path)
+              for item in os.listdir(local_path):
+                  local_item = os.path.join(local_path, item)
+                  remote_item = f"{remote_path}/{item}"
+                  if os.path.isdir(local_item):
+                      upload_dir(ftp, local_item, remote_item)
+                  else:
+                      with open(local_item, 'rb') as f:
+                          ftp.storbinary(f'STOR {remote_item}', f)
+                          print(f"  Uploaded: {remote_item}")
+
+          print(f"\nStep 1: Cleaning old files from {remote_dir}...")
+          delete_remote_dir(ftp, remote_dir)
+
+          print(f"\nStep 2: Uploading new build to {remote_dir}...")
+          upload_dir(ftp, local_dir, remote_dir)
+
+          ftp.quit()
+          print("\nDeploy complete!")
+          PYEOF
