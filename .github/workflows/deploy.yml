@@ -41,23 +41,27 @@ jobs:
           FTP_USER: ${{ secrets.FTP_USERNAME }}
           FTP_PASS: ${{ secrets.FTP_PASSWORD }}
         run: |
-          # CONFIRMED via cPanel File Manager: sharizkreations.com document root is /public_html/shariz/
+          # CONFIRMED via cPanel File Manager:
+          # Full server path: /home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz
+          # FTP root maps to /home2/esacunmy/ so FTP path is: /website-7b890dc7.esa.cun.mybluehost.me/shariz/
           lftp -c "
             set ftp:ssl-allow yes;
             set ftp:ssl-force yes;
             set ssl:verify-certificate no;
-            set net:timeout 30;
-            set net:max-retries 3;
+            set net:timeout 60;
+            set net:max-retries 5;
+            set net:reconnect-interval-base 5;
+            set net:reconnect-interval-multiplier 1;
             open -u '$FTP_USER','$FTP_PASS' ftp://$FTP_HOST;
             echo 'Connected to Bluehost FTP';
-            echo 'Step 1: Deleting old assets and index.html from web root /public_html/shariz/...';
-            rm -rf /public_html/shariz/assets;
-            rm -f /public_html/shariz/index.html;
-            rm -f /public_html/shariz/.htaccess;
-            rm -rf /public_html/shariz/__manus__;
-            echo 'Step 2: Uploading assets and static files to /public_html/shariz/...';
-            mirror --reverse --verbose --parallel=5 --exclude=index.html dist/public/ /public_html/shariz/;
-            echo 'Step 3: Force uploading index.html last (ensures it is always fresh)...';
-            put -O /public_html/shariz/ dist/public/index.html;
-            echo 'Deploy complete! index.html uploaded last to /public_html/shariz/';
+            echo 'Step 1: Deleting old assets from /website-7b890dc7.esa.cun.mybluehost.me/shariz/...';
+            rm -rf /website-7b890dc7.esa.cun.mybluehost.me/shariz/assets;
+            rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/index.html;
+            rm -f /website-7b890dc7.esa.cun.mybluehost.me/shariz/.htaccess;
+            rm -rf /website-7b890dc7.esa.cun.mybluehost.me/shariz/__manus__;
+            echo 'Step 2: Uploading new build to /website-7b890dc7.esa.cun.mybluehost.me/shariz/...';
+            mirror --reverse --verbose --parallel=5 --exclude=index.html dist/public/ /website-7b890dc7.esa.cun.mybluehost.me/shariz/;
+            echo 'Step 3: Uploading index.html last...';
+            put -O /website-7b890dc7.esa.cun.mybluehost.me/shariz/ dist/public/index.html;
+            echo 'Deploy complete!';
           "
