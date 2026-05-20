@@ -1,37 +1,28 @@
 name: Build & Deploy to Bluehost
-
 on:
   push:
     branches:
       - main
-
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build-and-deploy:
     name: Build React app and FTP deploy to Bluehost
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'pnpm'
-
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
-
       - name: Build
         run: pnpm build
-
       - name: Inject cache-bust timestamp into index.html
         run: |
           BUILD_TS=$(date +%s)
@@ -42,18 +33,17 @@ jobs:
           echo "Cache-bust timestamp: ${BUILD_TS}"
           echo "index.html script tags:"
           grep -o 'index-[A-Za-z0-9]*\.[jc][ss][^"]*' dist/public/index.html
-
       - name: Install lftp for FTP operations
         run: sudo apt-get install -y lftp
-
       - name: Clean remote directory and deploy fresh build
         env:
           FTP_HOST: ${{ secrets.FTP_HOST }}
           FTP_USER: ${{ secrets.FTP_USERNAME }}
           FTP_PASS: ${{ secrets.FTP_PASSWORD }}
         run: |
-          # NOTE: The FTP sub-account home dir IS the web root (/)
-          # Do NOT use /public_html/ — that creates a subdirectory instead of deploying to web root
+          # CONFIRMED via FTP debug: The FTP account home is /home/esacunmy/ (Bluehost account root)
+          # The domain sharizkreations.com document root is /public_html/website_7b890dc7/
+          # Deploy MUST go to /public_html/website_7b890dc7/ (NOT FTP root /)
           lftp -c "
             set ftp:ssl-allow yes;
             set ftp:ssl-force yes;
@@ -62,14 +52,14 @@ jobs:
             set net:max-retries 3;
             open -u '$FTP_USER','$FTP_PASS' ftp://$FTP_HOST;
             echo 'Connected to Bluehost FTP';
-            echo 'Step 1: Deleting old assets and index.html from web root...';
-            rm -rf /assets;
-            rm -f /index.html;
-            rm -f /.htaccess;
-            rm -rf /__manus__;
-            echo 'Step 2: Uploading assets and static files to web root...';
-            mirror --reverse --verbose --parallel=5 --exclude=index.html dist/public/ /;
+            echo 'Step 1: Deleting old assets and index.html from web root /public_html/website_7b890dc7/...';
+            rm -rf /public_html/website_7b890dc7/assets;
+            rm -f /public_html/website_7b890dc7/index.html;
+            rm -f /public_html/website_7b890dc7/.htaccess;
+            rm -rf /public_html/website_7b890dc7/__manus__;
+            echo 'Step 2: Uploading assets and static files to /public_html/website_7b890dc7/...';
+            mirror --reverse --verbose --parallel=5 --exclude=index.html dist/public/ /public_html/website_7b890dc7/;
             echo 'Step 3: Force uploading index.html last (ensures it is always fresh)...';
-            put -O / dist/public/index.html;
-            echo 'Deploy complete! index.html uploaded last.';
+            put -O /public_html/website_7b890dc7/ dist/public/index.html;
+            echo 'Deploy complete! index.html uploaded last to /public_html/website_7b890dc7/';
           "
