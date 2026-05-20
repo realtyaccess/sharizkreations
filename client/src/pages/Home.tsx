@@ -143,7 +143,7 @@ const PRODUCTS = [
     price: "From $200 CAD",
     images: [ALL_PHOTOS[5], ALL_PHOTOS[6], ALL_PHOTOS[7], ALL_PHOTOS[8]],
     tag: "Statement Piece",
-    availability: "Limited Stock",
+    availability: "Sold Out",
     waMessage: "Hi Shaz! I'm interested in your Canvas Wall Art. Could you share more details?",
   },
   {
@@ -176,7 +176,7 @@ const PRODUCTS = [
     price: "From $60 CAD",
     images: [ALL_PHOTOS[18], ALL_PHOTOS[19], ALL_PHOTOS[20], ALL_PHOTOS[21]],
     tag: "Fan Favourite",
-    availability: "Limited Stock",
+    availability: "Sold Out",
     waMessage: "Hi Shaz! I'm interested in your Resin Piggy Banks & Decor. Could you share more details?",
   },
   {
@@ -496,13 +496,15 @@ function ProductsSection() {
                 <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                 {product.availability && (
                   <span className={`absolute top-3 left-3 text-[9px] tracking-widest uppercase px-2 py-1 font-medium ${
-                    product.availability === "Limited Stock"
+                    product.availability === "Sold Out"
+                      ? "bg-red-950/80 text-red-300 border border-red-500/40"
+                      : product.availability === "Limited Stock"
                       ? "bg-amber-900/80 text-amber-300 border border-amber-500/40"
                       : product.availability === "Always Available"
                       ? "bg-emerald-900/80 text-emerald-300 border border-emerald-500/40"
                       : "bg-[#1a1a0e]/80 text-[#D4AF37] border border-[#D4AF37]/40"
                   }`} style={{ fontFamily: "'Jost', sans-serif", backdropFilter: "blur(4px)" }}>
-                    {product.availability === "Limited Stock" ? "⚡ Limited Stock" : product.availability === "Always Available" ? "✓ Always Available" : "✦ Taking Orders"}
+                    {product.availability === "Sold Out" ? "✕ Sold Out" : product.availability === "Limited Stock" ? "⚡ Limited Stock" : product.availability === "Always Available" ? "✓ Always Available" : "✦ Taking Orders"}
                   </span>
                 )}
               </div>
