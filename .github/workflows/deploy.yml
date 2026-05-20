@@ -40,7 +40,6 @@ jobs:
 
       # 6. Cache-bust: inject build timestamp into index.html so LiteSpeed
       #    and any CDN always serve the freshest version on every deploy.
-      #    This rewrites e.g. /assets/index-ABC.js → /assets/index-ABC.js?v=1716192000
       - name: Inject cache-bust timestamp into index.html
         run: |
           BUILD_TS=$(date +%s)
@@ -49,14 +48,11 @@ jobs:
           sed -i "s|\.js\" crossorigin|.js?v=${BUILD_TS}\" crossorigin|g" dist/public/index.html
           sed -i "s|\.css\" crossorigin|.css?v=${BUILD_TS}\" crossorigin|g" dist/public/index.html
           echo "Cache-bust timestamp: ${BUILD_TS}"
-          grep -o "v=[0-9]*" dist/public/index.html | head -3
 
       # 7. Deploy dist/public/ to Bluehost via explicit FTPS (port 21)
-      #    Secrets required in GitHub → Settings → Secrets → Actions:
-      #      FTP_HOST     = ftp.esa.cun.mybluehost.me
-      #      FTP_USERNAME = SHARIZ@website-7b890dc7.esa.cun.mybluehost.me
-      #      FTP_PASSWORD = your Bluehost/cPanel password
-      - name: Deploy via FTP to Bluehost
+      #    Using dangerous-clean-slate=true to force a FULL re-upload every time,
+      #    ensuring Bluehost always has exactly what was just built — no stale files.
+      - name: Deploy via FTP to Bluehost (full clean upload)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -66,6 +62,7 @@ jobs:
           protocol: ftps
           local-dir: ./dist/public/
           server-dir: /public_html/
+          dangerous-clean-slate: true
           exclude: |
             **/.git*
             **/.git*/**
