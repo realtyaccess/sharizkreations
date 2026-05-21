@@ -2,3 +2,4 @@
 deployment:
   tasks:
     - /bin/bash scripts/deploy.sh
+    - /bin/cp -f dist/public/deploy-helper.php /home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz/deploy-helper.php
