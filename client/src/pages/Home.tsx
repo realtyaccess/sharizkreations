@@ -12,6 +12,10 @@ import { toast } from "sonner";
 import { useCurrency, parseCadPrice } from "@/contexts/CurrencyContext";
 import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 import { SearchBar } from "@/components/SearchBar";
+import { useAdmin } from "@/contexts/AdminContext";
+import { AdminSignInModal } from "@/components/AdminSignIn";
+import { AdminToolbar } from "@/components/AdminToolbar";
+import { AdminEditPanel, AdminProduct, AdminReview, AdminSettings } from "@/components/AdminEditPanel";
 
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
 const WHATSAPP_NUMBER = "14039867064";
@@ -331,7 +335,8 @@ function PricingNote() {
 }
 
 // ─── Navigation ────────────────────────────────────────────────────────────────
-function Navigation() {
+function Navigation({ onAdminClick }: { onAdminClick?: () => void }) {
+  const { isAdmin, logout } = useAdmin();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -370,6 +375,17 @@ function Navigation() {
             <a href={getWhatsAppLink("Hi Shaz! I'd like to place an order.")} target="_blank" rel="noopener noreferrer" className="hidden lg:flex items-center gap-2 btn-gold text-xs">
               <MessageCircle size={13} /> Order Now
             </a>
+            {isAdmin ? (
+              <button onClick={logout} className="hidden lg:flex items-center gap-1 text-xs px-3 py-1.5 rounded transition-all" style={{ background: "rgba(212,175,55,0.15)", border: "1px solid rgba(212,175,55,0.4)", color: "#D4AF37", fontFamily: "'Jost', sans-serif", letterSpacing: "0.05em" }} title="Sign Out of Admin">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Sign Out
+              </button>
+            ) : (
+              <button onClick={onAdminClick} className="hidden lg:flex items-center gap-1 text-xs px-3 py-1.5 rounded transition-all" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.25)", color: "rgba(212,175,55,0.7)", fontFamily: "'Jost', sans-serif", letterSpacing: "0.05em" }} title="Admin Sign In">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                Admin
+              </button>
+            )}
             <button className="lg:hidden text-cream/80 hover:text-[#D4AF37] transition-colors" onClick={() => setMenuOpen(true)}>
               <Menu size={22} />
             </button>
@@ -397,6 +413,17 @@ function Navigation() {
               <motion.a initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: navLinks.length * 0.07 }} href={getWhatsAppLink("Hi Shaz! I'd like to place an order.")} target="_blank" rel="noopener noreferrer" className="btn-gold mt-4 flex items-center gap-2">
                 <MessageCircle size={14} /> Order on WhatsApp
               </motion.a>
+              {isAdmin ? (
+                <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: (navLinks.length + 1) * 0.07 }} onClick={() => { logout(); setMenuOpen(false); }} className="flex items-center gap-2 text-sm px-4 py-2 rounded" style={{ background: "rgba(212,175,55,0.15)", border: "1px solid rgba(212,175,55,0.4)", color: "#D4AF37", fontFamily: "'Jost', sans-serif" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                  Sign Out of Admin
+                </motion.button>
+              ) : (
+                <motion.button initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: (navLinks.length + 1) * 0.07 }} onClick={() => { setMenuOpen(false); onAdminClick?.(); }} className="flex items-center gap-2 text-sm px-4 py-2 rounded" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.25)", color: "rgba(212,175,55,0.7)", fontFamily: "'Jost', sans-serif" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                  Admin Sign In
+                </motion.button>
+              )}
             </div>
           </motion.div>
         )}
@@ -406,7 +433,7 @@ function Navigation() {
 }
 
 // ─── Hero Section (Video Background) ──────────────────────────────────────────
-function HeroSection() {
+function HeroSection({ settings }: { settings?: { heroTitle?: string; heroSubtitle?: string } }) {
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 600], [0, 150]);
   const opacity = useTransform(scrollY, [0, 400], [1, 0]);
@@ -524,7 +551,7 @@ function AboutSection() {
 }
 
 // ─── Products Section ──────────────────────────────────────────────────────────
-function ProductsSection() {
+function ProductsSection({ products = PRODUCTS }: { products?: typeof PRODUCTS }) {
   const [selected, setSelected] = useState<typeof PRODUCTS[0] | null>(null);
   const [activeImg, setActiveImg] = useState(0);
 
@@ -606,7 +633,7 @@ function ProductsSection() {
                   <p className="text-cream/70 text-sm leading-relaxed" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>{selected.description}</p>
                 </div>
                 <div className="mt-6 space-y-3">
-                  <a href={getWhatsAppLink(selected.waMessage)} target="_blank" rel="noopener noreferrer" className="btn-gold w-full text-center flex items-center justify-center gap-2">
+                  <a href={getWhatsAppLink((selected as any).waMessage || `Hi Shaz! I'm interested in your ${selected.name}. Could you share more details?`)} target="_blank" rel="noopener noreferrer" className="btn-gold w-full text-center flex items-center justify-center gap-2">
                     <MessageCircle size={14} /> Order via WhatsApp
                   </a>
                   <button onClick={() => { setSelected(null); document.getElementById("custom-orders")?.scrollIntoView({ behavior: "smooth" }); }} className="btn-outline-gold w-full text-center">
@@ -674,7 +701,7 @@ function PricingSection() {
 }
 
 // ─── Gallery Section ───────────────────────────────────────────────────────────
-function GallerySection() {
+function GallerySection({ photos = GALLERY_PHOTOS }: { photos?: string[] }) {
   const [lightbox, setLightbox] = useState<string | null>(null);
 
   return (
@@ -689,7 +716,7 @@ function GallerySection() {
         </div>
 
         <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
-          {GALLERY_PHOTOS.map((src, i) => (
+          {photos.map((src, i) => (
             <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: (i % 8) * 0.06 }} className="insta-item break-inside-avoid cursor-pointer mb-3 relative" onClick={() => setLightbox(src)}>
               <img src={src} alt={`Gallery ${i + 1}`} className="w-full object-cover" />
               {SOLD_INDICES.includes(i) && (
@@ -723,7 +750,8 @@ function GallerySection() {
 }
 
 // ─── Testimonials ──────────────────────────────────────────────────────────────
-function TestimonialsSection() {
+function TestimonialsSection({ reviews }: { reviews?: Array<{id: number; name: string; rating: number; text: string; date: string}> }) {
+  const displayReviews = reviews ?? TESTIMONIALS.map((t, i) => ({ id: i+1, name: t.name, rating: t.stars, text: t.text, date: t.source }));
   return (
     <section className="py-20 relative">
       <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(ellipse at center, #D4AF37 0%, transparent 70%)" }} />
@@ -736,9 +764,9 @@ function TestimonialsSection() {
           <div className="gold-divider" />
         </div>
         <div className="grid md:grid-cols-3 gap-6">
-          {TESTIMONIALS.map((t, i) => (
+          {displayReviews.map((t, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: i * 0.15 }} className="p-8 relative" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
-              <div className="flex gap-1 mb-4">{Array.from({ length: t.stars }).map((_, j) => <Star key={j} size={12} fill="#D4AF37" className="text-[#D4AF37]" />)}</div>
+              <div className="flex gap-1 mb-4">{Array.from({ length: t.rating ?? (t as any).stars ?? 5 }).map((_, j) => <Star key={j} size={12} fill="#D4AF37" className="text-[#D4AF37]" />)}</div>
               <p className="text-cream/70 leading-relaxed mb-6 italic" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.05rem" }}>"{t.text}"</p>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)" }}>
@@ -746,7 +774,7 @@ function TestimonialsSection() {
                 </div>
                 <div>
                   <p className="text-cream/80 text-sm font-medium" style={{ fontFamily: "'Jost', sans-serif" }}>{t.name}</p>
-                  <p className="text-cream/40 text-xs" style={{ fontFamily: "'Jost', sans-serif" }}>{t.source}</p>
+                  <p className="text-cream/40 text-xs" style={{ fontFamily: "'Jost', sans-serif" }}>{t.date ?? (t as any).source}</p>
                 </div>
               </div>
               <div className="absolute top-4 right-6 text-6xl leading-none opacity-10" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#D4AF37" }}>"</div>
@@ -1555,15 +1583,73 @@ function FloatingWhatsApp() {
 
 // ─── Main ──────────────────────────────────────────────────────────────────────
 export default function Home() {
+  const { isAdmin } = useAdmin();
+  const [showSignIn, setShowSignIn] = useState(false);
+  const [editPanel, setEditPanel] = useState<"products" | "reviews" | "gallery" | "settings" | null>(null);
+
+  // Admin-editable state (starts from static data, persists in localStorage)
+  const [adminProducts, setAdminProducts] = useState<AdminProduct[]>(() => {
+    try {
+      const saved = localStorage.getItem("shariz_products");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return PRODUCTS.map(p => ({ ...p, images: [...p.images] }));
+  });
+
+  const [adminReviews, setAdminReviews] = useState<AdminReview[]>(() => {
+    try {
+      const saved = localStorage.getItem("shariz_reviews");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return TESTIMONIALS.map((t, i) => ({ id: i + 1, name: t.name, rating: t.stars, text: t.text, date: t.source }));
+  });
+
+  const [adminGallery, setAdminGallery] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("shariz_gallery");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return GALLERY_PHOTOS;
+  });
+
+  const [adminSettings, setAdminSettings] = useState<AdminSettings>(() => {
+    try {
+      const saved = localStorage.getItem("shariz_settings");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return { heroTitle: "Handcrafted Resin Art", heroSubtitle: "Bespoke pieces for your home, your heart, your story.", whatsapp: WHATSAPP_NUMBER, instagram: "sharizkreations" };
+  });
+
+  function saveProducts(p: AdminProduct[]) {
+    setAdminProducts(p);
+    localStorage.setItem("shariz_products", JSON.stringify(p));
+    toast.success("Products updated!");
+  }
+  function saveReviews(r: AdminReview[]) {
+    setAdminReviews(r);
+    localStorage.setItem("shariz_reviews", JSON.stringify(r));
+    toast.success("Reviews updated!");
+  }
+  function saveGallery(g: string[]) {
+    setAdminGallery(g);
+    localStorage.setItem("shariz_gallery", JSON.stringify(g));
+    toast.success("Gallery updated!");
+  }
+  function saveSettings(s: AdminSettings) {
+    setAdminSettings(s);
+    localStorage.setItem("shariz_settings", JSON.stringify(s));
+    toast.success("Settings saved!");
+  }
+
   return (
     <div className="min-h-screen" style={{ background: "oklch(0.10 0.005 60)" }}>
-      <Navigation />
-      <HeroSection />
+      <Navigation onAdminClick={() => setShowSignIn(true)} />
+      <HeroSection settings={adminSettings} />
       <AboutSection />
-      <ProductsSection />
+      <ProductsSection products={adminProducts} />
       <PricingSection />
-      <GallerySection />
-      <TestimonialsSection />
+      <GallerySection photos={adminGallery} />
+      <TestimonialsSection reviews={adminReviews} />
       <CustomOrdersSection />
       <FAQSection />
       <BookConsultationSection />
@@ -1573,6 +1659,35 @@ export default function Home() {
       <ContactSection />
       <Footer />
       <FloatingWhatsApp />
+
+      {/* Admin Sign In Modal */}
+      {showSignIn && !isAdmin && <AdminSignInModal onClose={() => setShowSignIn(false)} />}
+
+      {/* Admin Toolbar (shown when logged in) */}
+      {isAdmin && (
+        <AdminToolbar
+          onEditProducts={() => setEditPanel("products")}
+          onEditReviews={() => setEditPanel("reviews")}
+          onEditGallery={() => setEditPanel("gallery")}
+          onEditSettings={() => setEditPanel("settings")}
+        />
+      )}
+
+      {/* Admin Edit Panel */}
+      {isAdmin && editPanel && (
+        <AdminEditPanel
+          mode={editPanel}
+          onClose={() => setEditPanel(null)}
+          products={adminProducts}
+          reviews={adminReviews}
+          galleryPhotos={adminGallery}
+          settings={adminSettings}
+          onSaveProducts={saveProducts}
+          onSaveReviews={saveReviews}
+          onSaveGallery={saveGallery}
+          onSaveSettings={saveSettings}
+        />
+      )}
     </div>
   );
 }
