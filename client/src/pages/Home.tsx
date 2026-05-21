@@ -752,10 +752,34 @@ function GallerySection({ photos = GALLERY_PHOTOS }: { photos?: string[] }) {
 // ─── Testimonials ──────────────────────────────────────────────────────────────
 function TestimonialsSection({ reviews }: { reviews?: Array<{id: number; name: string; rating: number; text: string; date: string}> }) {
   const displayReviews = reviews ?? TESTIMONIALS.map((t, i) => ({ id: i+1, name: t.name, rating: t.stars, text: t.text, date: t.source }));
+  const [form, setForm] = useState({ name: "", review: "", stars: 5, product: "" });
+  const [submitted, setSubmitted] = useState(false);
+  const productOptions = [
+    "Resin Coasters", "Canvas Wall Art", "Serving Tray", "Islamic Calligraphy Art",
+    "Piggy Bank / Desk Decor", "Wedding Decor", "Custom Gift Set", "Corporate Gift", "Other",
+  ];
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.review.trim()) return;
+    const msg = [
+      `⭐ *New Review — ShaRiz Kreations*`,
+      ``,
+      `👤 *Name:* ${form.name}`,
+      form.product ? `🎨 *Product:* ${form.product}` : null,
+      `⭐ *Rating:* ${"★".repeat(form.stars)}${"".repeat(5 - form.stars)} (${form.stars}/5)`,
+      ``,
+      `💬 *Review:*`,
+      form.review,
+    ].filter(Boolean).join("\n");
+    window.open(getWhatsAppLink(msg), "_blank");
+    setSubmitted(true);
+    toast.success("Review sent to Shaz via WhatsApp! ✨", { style: { background: "#1a1a1a", border: "1px solid #D4AF37", color: "#EDE8DC" } });
+  };
   return (
-    <section className="py-20 relative">
+    <section className="py-20 relative" id="reviews">
       <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(ellipse at center, #D4AF37 0%, transparent 70%)" }} />
       <div className="container relative z-10">
+        {/* Section heading */}
         <div className="text-center mb-12">
           <p className="section-label mb-4">Kind Words</p>
           <h2 className="text-4xl md:text-5xl font-light" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#EDE8DC" }}>
@@ -763,11 +787,12 @@ function TestimonialsSection({ reviews }: { reviews?: Array<{id: number; name: s
           </h2>
           <div className="gold-divider" />
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        {/* Review cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-16">
           {displayReviews.map((t, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: i * 0.15 }} className="p-8 relative" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
               <div className="flex gap-1 mb-4">{Array.from({ length: t.rating ?? (t as any).stars ?? 5 }).map((_, j) => <Star key={j} size={12} fill="#D4AF37" className="text-[#D4AF37]" />)}</div>
-              <p className="text-cream/70 leading-relaxed mb-6 italic" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.05rem" }}>"{t.text}"</p>
+              <p className="text-cream/70 leading-relaxed mb-6 italic" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.05rem" }}>"{ t.text}"</p>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)" }}>
                   <span className="text-xs font-bold text-[#0d0d0d]">{t.name[0]}</span>
@@ -780,6 +805,65 @@ function TestimonialsSection({ reviews }: { reviews?: Array<{id: number; name: s
               <div className="absolute top-4 right-6 text-6xl leading-none opacity-10" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#D4AF37" }}>"</div>
             </motion.div>
           ))}
+        </div>
+        {/* Divider */}
+        <div className="gold-divider mb-12" />
+        {/* Leave a Review form — merged inline */}
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-8">
+            <p className="section-label mb-3">Share Your Experience</p>
+            <h3 className="text-3xl md:text-4xl font-light mb-2" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#EDE8DC" }}>
+              Leave a <span className="italic text-[#D4AF37]">Review</span>
+            </h3>
+            <p className="text-cream/40 text-sm" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Loved your piece? Your kind words help other customers discover ShaRiz Kreations.</p>
+          </div>
+          {submitted ? (
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-10 text-center" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "linear-gradient(135deg, #D4AF37, #A88A20)" }}>
+                <Heart size={24} className="text-[#0a0a0a]" fill="#0a0a0a" />
+              </div>
+              <h3 className="text-2xl font-light text-cream mb-2" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Thank You!</h3>
+              <p className="text-cream/50 text-sm mb-6" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Your review has been sent to Shaz via WhatsApp. It means the world!</p>
+              <div className="gold-divider" />
+              <p className="text-cream/60 text-sm mb-4 mt-4" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Love your piece? Share it on Instagram and tag us!</p>
+              <a href="https://www.instagram.com/sharizkreations" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 text-xs tracking-widest uppercase transition-all hover:opacity-80" style={{ background: "linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)", color: "#fff", fontFamily: "'Jost', sans-serif" }}>
+                <Instagram size={14} /> Tag @sharizkreations
+              </a>
+              <button onClick={() => setSubmitted(false)} className="mt-4 block mx-auto btn-outline-gold text-xs">Submit Another Review</button>
+            </motion.div>
+          ) : (
+            <motion.form initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} onSubmit={handleSubmit} className="p-8 space-y-5" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
+              <div>
+                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-3" style={{ fontFamily: "'Jost', sans-serif" }}>Your Rating</label>
+                <div className="flex gap-2">
+                  {[1,2,3,4,5].map((s) => (
+                    <button key={s} type="button" onClick={() => setForm(f => ({ ...f, stars: s }))} className="transition-transform hover:scale-110 active:scale-95">
+                      <Star size={24} fill={s <= form.stars ? "#D4AF37" : "none"} className={s <= form.stars ? "text-[#D4AF37]" : "text-cream/20"} />
+                    </button>
+                  ))}
+                  <span className="text-cream/40 text-sm self-center ml-2" style={{ fontFamily: "'Jost', sans-serif" }}>{form.stars}/5</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Your Name *</label>
+                <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Sarah M." className="w-full px-4 py-3 text-sm text-cream bg-transparent outline-none transition-colors" style={{ border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif", fontWeight: 300 }} onFocus={e => e.target.style.borderColor = "rgba(212,175,55,0.6)"} onBlur={e => e.target.style.borderColor = "rgba(212,175,55,0.2)"} />
+              </div>
+              <div>
+                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Product Purchased (Optional)</label>
+                <select value={form.product} onChange={e => setForm(f => ({ ...f, product: e.target.value }))} className="w-full px-4 py-3 text-sm text-cream/70 bg-transparent outline-none" style={{ border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif", fontWeight: 300, background: "oklch(0.14 0.006 60)" }}>
+                  <option value="">Select a product...</option>
+                  {productOptions.map(p => <option key={p} value={p} style={{ background: "#1a1a14" }}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Your Review *</label>
+                <textarea required value={form.review} onChange={e => setForm(f => ({ ...f, review: e.target.value }))} rows={4} placeholder="Tell others about your experience with ShaRiz Kreations..." className="w-full px-4 py-3 text-sm text-cream bg-transparent outline-none resize-none transition-colors" style={{ border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif", fontWeight: 300 }} onFocus={e => e.target.style.borderColor = "rgba(212,175,55,0.6)"} onBlur={e => e.target.style.borderColor = "rgba(212,175,55,0.2)"} />
+              </div>
+              <button type="submit" className="w-full btn-gold flex items-center justify-center gap-2">
+                <Heart size={13} /> Submit Review
+              </button>
+            </motion.form>
+          )}
         </div>
       </div>
     </section>
@@ -1321,109 +1405,6 @@ function BookConsultationSection() {
   );
 }
 
-// ─── Testimonial Submission Section ────────────────────────────────────────────
-function TestimonialSubmitSection() {
-  const [form, setForm] = useState({ name: "", review: "", stars: 5, product: "" });
-  const [submitted, setSubmitted] = useState(false);
-
-  const productOptions = [
-    "Resin Coasters", "Canvas Wall Art", "Serving Tray", "Islamic Calligraphy Art",
-    "Piggy Bank / Decor", "Custom Gift Set", "Wedding / Event Decor", "Other",
-  ];
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name.trim() || !form.review.trim()) return;
-    const stars = "⭐".repeat(form.stars);
-    const msg = [
-      `✨ *New Review for ShaRiz Kreations*`,
-      ``,
-      `👤 *Name:* ${form.name}`,
-      form.product ? `🎨 *Product:* ${form.product}` : "",
-      `${stars} *Rating:* ${form.stars}/5`,
-      ``,
-      `💬 *Review:*`,
-      form.review,
-    ].filter(Boolean).join("\n");
-    window.open(getWhatsAppLink(msg), "_blank");
-    setSubmitted(true);
-  };
-
-  return (
-    <section className="py-20 relative" style={{ background: "oklch(0.13 0.006 60)" }}>
-      <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "radial-gradient(ellipse at 50% 0%, #D4AF37 0%, transparent 60%)" }} />
-      <div className="container relative z-10">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="section-label mb-4">Share Your Experience</p>
-            <h2 className="text-4xl md:text-5xl font-light mb-3" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#EDE8DC" }}>
-              Leave a <span className="italic text-[#D4AF37]">Review</span>
-            </h2>
-            <p className="text-cream/40 text-sm" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Loved your piece? Your kind words help other customers discover ShaRiz Kreations.</p>
-            <div className="gold-divider" />
-          </div>
-
-          {submitted ? (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-12 px-8" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.3)" }}>
-              <div className="text-4xl mb-4">✦</div>
-              <h3 className="text-2xl font-light text-cream mb-2" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Thank You!</h3>
-              <p className="text-cream/50 text-sm mb-6" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Your review has been sent to Shaz via WhatsApp. It means the world!</p>
-              <div className="gold-divider" />
-              <p className="text-cream/60 text-sm mb-4 mt-4" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Love your piece? Share it on Instagram and tag us!</p>
-              <a
-                href="https://www.instagram.com/sharizkreations"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs tracking-widest uppercase transition-all hover:opacity-80"
-                style={{ background: "linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)", color: "#fff", fontFamily: "'Jost', sans-serif" }}
-              >
-                <Instagram size={14} /> Tag @sharizkreations
-              </a>
-              <button onClick={() => setSubmitted(false)} className="mt-4 block mx-auto btn-outline-gold text-xs">Submit Another Review</button>
-            </motion.div>
-          ) : (
-            <motion.form initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} onSubmit={handleSubmit} className="p-8 space-y-5" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
-              {/* Star rating */}
-              <div>
-                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-3" style={{ fontFamily: "'Jost', sans-serif" }}>Your Rating</label>
-                <div className="flex gap-2">
-                  {[1,2,3,4,5].map((s) => (
-                    <button key={s} type="button" onClick={() => setForm(f => ({ ...f, stars: s }))} className="transition-transform hover:scale-110 active:scale-95">
-                      <Star size={24} fill={s <= form.stars ? "#D4AF37" : "none"} className={s <= form.stars ? "text-[#D4AF37]" : "text-cream/20"} />
-                    </button>
-                  ))}
-                  <span className="text-cream/40 text-sm self-center ml-2" style={{ fontFamily: "'Jost', sans-serif" }}>{form.stars}/5</span>
-                </div>
-              </div>
-              {/* Name */}
-              <div>
-                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Your Name *</label>
-                <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Sarah M." className="w-full px-4 py-3 text-sm text-cream bg-transparent outline-none transition-colors" style={{ border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif", fontWeight: 300 }} onFocus={e => e.target.style.borderColor = "rgba(212,175,55,0.6)"} onBlur={e => e.target.style.borderColor = "rgba(212,175,55,0.2)"} />
-              </div>
-              {/* Product */}
-              <div>
-                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Product Purchased (Optional)</label>
-                <select value={form.product} onChange={e => setForm(f => ({ ...f, product: e.target.value }))} className="w-full px-4 py-3 text-sm text-cream/70 bg-transparent outline-none" style={{ border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif", fontWeight: 300, background: "oklch(0.14 0.006 60)" }}>
-                  <option value="">Select a product...</option>
-                  {productOptions.map(p => <option key={p} value={p} style={{ background: "#1a1a14" }}>{p}</option>)}
-                </select>
-              </div>
-              {/* Review text */}
-              <div>
-                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Your Review *</label>
-                <textarea required value={form.review} onChange={e => setForm(f => ({ ...f, review: e.target.value }))} rows={4} placeholder="Tell others about your experience with ShaRiz Kreations..." className="w-full px-4 py-3 text-sm text-cream bg-transparent outline-none resize-none transition-colors" style={{ border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif", fontWeight: 300 }} onFocus={e => e.target.style.borderColor = "rgba(212,175,55,0.6)"} onBlur={e => e.target.style.borderColor = "rgba(212,175,55,0.2)"} />
-              </div>
-              <button type="submit" className="w-full btn-gold flex items-center justify-center gap-2">
-                <Heart size={13} /> Submit Review
-              </button>
-            </motion.form>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ─── Refer a Friend Section ──────────────────────────────────────────────────
 function ReferAFriendSection() {
   const [copied, setCopied] = useState(false);
@@ -1653,7 +1634,6 @@ export default function Home() {
       <CustomOrdersSection />
       <FAQSection />
       <BookConsultationSection />
-      <TestimonialSubmitSection />
       <ReferAFriendSection />
       <InstagramSection />
       <ContactSection />
