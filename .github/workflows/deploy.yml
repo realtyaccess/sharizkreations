@@ -1,22 +1,24 @@
-name: Build & Deploy to Bluehost
+name: Build & Deploy to Bluehost via cPanel Git
 on:
   push:
     branches:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-and-deploy:
-    name: Build React app and deploy via cPanel Git
+    name: Build React app and trigger cPanel deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_TOKEN }}
           fetch-depth: 0
 
       - name: Install pnpm
@@ -36,40 +38,31 @@ jobs:
 
       - name: Commit built files to repo
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          # Remove dist/public from .gitignore so we can commit it
-          git rm -r --cached dist/public/ 2>/dev/null || true
+          git config user.name "ShaRiz Deploy"
+          git config user.email "deploy@sharizkreations.com"
           git add -f dist/public/
-          # Only commit if there are changes
           if git diff --staged --quiet; then
             echo "No changes to built files — skipping commit"
           else
             git commit -m "chore: update built files [skip ci]"
-            git push origin main
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
             echo "Built files committed and pushed"
           fi
 
-      - name: Trigger cPanel Git pull
-        env:
-          CPANEL_USER: ${{ secrets.CPANEL_USER }}
-          CPANEL_TOKEN: ${{ secrets.CPANEL_TOKEN }}
-          CPANEL_HOST: ${{ secrets.CPANEL_HOST }}
+      - name: Trigger cPanel Git pull via API
         run: |
           echo "=== Triggering cPanel Git pull ==="
-          RESPONSE=$(curl -sk -H "Authorization: cpanel $CPANEL_USER:$CPANEL_TOKEN" \
-            "https://$CPANEL_HOST:2083/execute/VersionControl/retrieve_repositories" \
+          CPANEL_USER="${{ secrets.CPANEL_USER }}"
+          CPANEL_TOKEN="${{ secrets.CPANEL_TOKEN }}"
+          CPANEL_HOST="box2324.bluehost.com"
+          if [ -z "$CPANEL_TOKEN" ]; then
+            echo "CPANEL_TOKEN not set — skipping cPanel trigger"
+            echo "Please add CPANEL_USER and CPANEL_TOKEN secrets to enable auto-deploy"
+            exit 0
+          fi
+          RESPONSE=$(curl -sk \
+            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
+            "https://${CPANEL_HOST}:2083/execute/VersionControlDeployment/create?repository_root=%2Fhome2%2Fesacunmy%2Fsharizkreations-repo" \
             2>&1)
-          echo "Repositories: $RESPONSE" | python3 -c "
-          import json, sys
-          data = sys.stdin.read()
-          start = data.find('{')
-          if start >= 0:
-              try:
-                  obj = json.loads(data[start:])
-                  repos = obj.get('data', {}).get('repositories', [])
-                  for r in repos:
-                      print('Repo:', r.get('repository_root','?'), '| Branch:', r.get('branch','?'))
-              except:
-                  print('Raw:', data[:500])
-          " || echo "Could not parse response"
+          echo "cPanel response: $RESPONSE"
+          echo "Deploy triggered!"
