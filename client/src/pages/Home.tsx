@@ -4,7 +4,7 @@
  * Updated: Hero video background, enhanced custom order form with WhatsApp pre-fill
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { Instagram, MapPin, Star, ChevronDown, X, Menu, ShoppingBag, Sparkles, Heart, Upload, MessageCircle, Check, Calendar, DollarSign, Phone } from "lucide-react";
 import { Link } from "wouter";
@@ -15,7 +15,9 @@ import { SearchBar } from "@/components/SearchBar";
 import { useAdmin } from "@/contexts/AdminContext";
 import { AdminSignInModal } from "@/components/AdminSignIn";
 import { AdminToolbar } from "@/components/AdminToolbar";
-import { AdminEditPanel, AdminProduct, AdminReview, AdminSettings } from "@/components/AdminEditPanel";
+import { AdminEditPanel } from "@/components/AdminEditPanel";
+import type { ApiProduct, ApiReview, ApiGalleryItem, ApiSettings } from "@/lib/api";
+import { fetchPublicProducts, fetchPublicReviews, fetchPublicGallery, fetchPublicSettings } from "@/lib/api";
 
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
 const WHATSAPP_NUMBER = "14039867064";
@@ -551,8 +553,8 @@ function AboutSection() {
 }
 
 // ─── Products Section ──────────────────────────────────────────────────────────
-function ProductsSection({ products = PRODUCTS }: { products?: typeof PRODUCTS }) {
-  const [selected, setSelected] = useState<typeof PRODUCTS[0] | null>(null);
+function ProductsSection({ products = [] }: { products?: ApiProduct[] }) {
+  const [selected, setSelected] = useState<ApiProduct | null>(null);
   const [activeImg, setActiveImg] = useState(0);
 
   return (
@@ -570,7 +572,7 @@ function ProductsSection({ products = PRODUCTS }: { products?: typeof PRODUCTS }
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {PRODUCTS.map((product, i) => (
+          {products.map((product, i) => (
             <motion.div key={product.id} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: i * 0.1 }} className="product-card cursor-pointer" onClick={() => { setSelected(product); setActiveImg(0); }}>
               <div className="card-img aspect-square relative">
                 <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
@@ -595,7 +597,7 @@ function ProductsSection({ products = PRODUCTS }: { products?: typeof PRODUCTS }
                     <h3 className="text-xl font-light text-cream" style={{ fontFamily: "'Cormorant Garamond', serif" }}>{product.name}</h3>
                     <p className="text-xs text-cream/50 mt-0.5" style={{ fontFamily: "'Jost', sans-serif" }}>{product.subtitle}</p>
                   </div>
-                  <ProductPrice price={product.price} />
+                  <ProductPrice price={product.actual_price ? `From $${product.actual_price} CAD` : "Custom Quote"} />
                 </div>
                 <p className="text-cream/50 text-sm leading-relaxed mt-3 line-clamp-2" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>{product.description}</p>
                 <button className="mt-4 text-[10px] tracking-widest uppercase text-[#D4AF37] hover:text-[#F0D060] transition-colors flex items-center gap-2" style={{ fontFamily: "'Jost', sans-serif" }}>
@@ -628,7 +630,7 @@ function ProductsSection({ products = PRODUCTS }: { products?: typeof PRODUCTS }
                   <p className="section-label mb-3">{selected.tag}</p>
                   <h3 className="text-3xl font-light text-cream mb-1" style={{ fontFamily: "'Cormorant Garamond', serif" }}>{selected.name}</h3>
                   <p className="text-sm text-cream/50 mb-1" style={{ fontFamily: "'Jost', sans-serif" }}>{selected.subtitle}</p>
-                  <p className="text-[#D4AF37] font-medium mb-4" style={{ fontFamily: "'Jost', sans-serif" }}><ProductPriceInline price={selected.price} /></p>
+                  <p className="text-[#D4AF37] font-medium mb-4" style={{ fontFamily: "'Jost', sans-serif" }}><ProductPriceInline price={selected.actual_price ? `From $${selected.actual_price} CAD` : "Custom Quote"} /></p>
                   <div className="gold-divider" style={{ margin: "0 0 1rem 0" }} />
                   <p className="text-cream/70 text-sm leading-relaxed" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>{selected.description}</p>
                 </div>
@@ -701,7 +703,7 @@ function PricingSection() {
 }
 
 // ─── Gallery Section ───────────────────────────────────────────────────────────
-function GallerySection({ photos = GALLERY_PHOTOS }: { photos?: string[] }) {
+function GallerySection({ photos = [] }: { photos?: ApiGalleryItem[] }) {
   const [lightbox, setLightbox] = useState<string | null>(null);
 
   return (
@@ -716,15 +718,9 @@ function GallerySection({ photos = GALLERY_PHOTOS }: { photos?: string[] }) {
         </div>
 
         <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
-          {photos.map((src, i) => (
-            <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: (i % 8) * 0.06 }} className="insta-item break-inside-avoid cursor-pointer mb-3 relative" onClick={() => setLightbox(src)}>
-              <img src={src} alt={`Gallery ${i + 1}`} className="w-full object-cover" />
-              {SOLD_INDICES.includes(i) && (
-                <div className="absolute top-2 left-2 px-2 py-0.5 text-[9px] font-bold tracking-widest uppercase" style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)", color: "#0d0d0d", fontFamily: "'Jost', sans-serif" }}>✦ Sold</div>
-              )}
-              {NEW_INDICES.includes(i) && (
-                <div className="absolute top-2 left-2 px-2 py-0.5 text-[9px] font-bold tracking-widest uppercase" style={{ background: "linear-gradient(135deg, #2d6a4f, #40916c)", color: "#fff", fontFamily: "'Jost', sans-serif" }}>✦ New</div>
-              )}
+          {photos.map((item, i) => (
+            <motion.div key={item.id} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: (i % 8) * 0.06 }} className="insta-item break-inside-avoid cursor-pointer mb-3 relative" onClick={() => setLightbox(item.image_url)}>
+              <img src={item.image_url} alt={item.caption || `Gallery ${i + 1}`} className="w-full object-cover" />
             </motion.div>
           ))}
         </div>
@@ -750,8 +746,8 @@ function GallerySection({ photos = GALLERY_PHOTOS }: { photos?: string[] }) {
 }
 
 // ─── Testimonials ──────────────────────────────────────────────────────────────
-function TestimonialsSection({ reviews }: { reviews?: Array<{id: number; name: string; rating: number; text: string; date: string}> }) {
-  const displayReviews = reviews ?? TESTIMONIALS.map((t, i) => ({ id: i+1, name: t.name, rating: t.stars, text: t.text, date: t.source }));
+function TestimonialsSection({ reviews }: { reviews?: ApiReview[] }) {
+  const displayReviews = (reviews && reviews.length > 0) ? reviews.map(r => ({ id: r.id, name: r.customer_name, rating: r.stars, text: r.review, date: r.product_name || new Date(r.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) })) : TESTIMONIALS.map((t, i) => ({ id: i+1, name: t.name, rating: t.stars, text: t.text, date: t.source }));
   const [form, setForm] = useState({ name: "", review: "", stars: 5, product: "" });
   const [submitted, setSubmitted] = useState(false);
   const productOptions = [
@@ -1568,57 +1564,77 @@ export default function Home() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [editPanel, setEditPanel] = useState<"products" | "reviews" | "gallery" | "settings" | null>(null);
 
-  // Admin-editable state (starts from static data, persists in localStorage)
-  const [adminProducts, setAdminProducts] = useState<AdminProduct[]>(() => {
-    try {
-      const saved = localStorage.getItem("shariz_products");
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return PRODUCTS.map(p => ({ ...p, images: [...p.images] }));
-  });
+  // Live data from the database
+  const [adminProducts, setAdminProducts] = useState<ApiProduct[]>([]);
+  const [adminReviews, setAdminReviews] = useState<ApiReview[]>([]);
+  const [adminGallery, setAdminGallery] = useState<ApiGalleryItem[]>([]);
+  const [adminSettings, setAdminSettings] = useState<ApiSettings>({});
+  const [dataLoaded, setDataLoaded] = useState(false);
 
-  const [adminReviews, setAdminReviews] = useState<AdminReview[]>(() => {
+  // Load all data from the API on mount
+  const loadData = useCallback(async () => {
     try {
-      const saved = localStorage.getItem("shariz_reviews");
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return TESTIMONIALS.map((t, i) => ({ id: i + 1, name: t.name, rating: t.stars, text: t.text, date: t.source }));
-  });
+      const [products, reviews, gallery, settings] = await Promise.all([
+        fetchPublicProducts(),
+        fetchPublicReviews(),
+        fetchPublicGallery(),
+        fetchPublicSettings(),
+      ]);
+      setAdminProducts(products);
+      setAdminReviews(reviews);
+      setAdminGallery(gallery);
+      setAdminSettings(settings);
+    } catch (err) {
+      console.error("Failed to load data:", err);
+      // Fallback to static data if API fails
+      setAdminProducts(PRODUCTS.map((p, i) => ({
+        id: i + 1,
+        name: p.name,
+        subtitle: p.subtitle,
+        description: p.description,
+        actual_price: parseFloat(p.price.replace(/[^0-9.]/g, "")) || null,
+        sale_price: null,
+        discount_percent: 0,
+        tag: p.tag,
+        availability: p.availability,
+        images: p.images,
+        sort_order: i + 1,
+        is_active: 1,
+      })));
+      setAdminReviews(TESTIMONIALS.map((t, i) => ({
+        id: i + 1,
+        customer_name: t.name,
+        review: t.text,
+        stars: t.stars,
+        product_name: null,
+        is_approved: 1,
+        is_visible: 1,
+        sort_order: i,
+        created_at: new Date().toISOString(),
+      })));
+      setAdminGallery(GALLERY_PHOTOS.map((url, i) => ({ id: i + 1, image_url: url, caption: null, sort_order: i + 1, is_visible: 1 })));
+      setAdminSettings({ heroTitle: "Handcrafted Resin Art", heroSubtitle: "Bespoke pieces for your home, your heart, your story.", whatsapp: WHATSAPP_NUMBER, instagram: "https://www.instagram.com/sharizkreations" });
+    } finally {
+      setDataLoaded(true);
+    }
+  }, []);
 
-  const [adminGallery, setAdminGallery] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem("shariz_gallery");
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return GALLERY_PHOTOS;
-  });
+  useEffect(() => { loadData(); }, [loadData]);
 
-  const [adminSettings, setAdminSettings] = useState<AdminSettings>(() => {
-    try {
-      const saved = localStorage.getItem("shariz_settings");
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return { heroTitle: "Handcrafted Resin Art", heroSubtitle: "Bespoke pieces for your home, your heart, your story.", whatsapp: WHATSAPP_NUMBER, instagram: "sharizkreations" };
-  });
-
-  function saveProducts(p: AdminProduct[]) {
+  function saveProducts(p: ApiProduct[]) {
     setAdminProducts(p);
-    localStorage.setItem("shariz_products", JSON.stringify(p));
     toast.success("Products updated!");
   }
-  function saveReviews(r: AdminReview[]) {
+  function saveReviews(r: ApiReview[]) {
     setAdminReviews(r);
-    localStorage.setItem("shariz_reviews", JSON.stringify(r));
     toast.success("Reviews updated!");
   }
-  function saveGallery(g: string[]) {
+  function saveGallery(g: ApiGalleryItem[]) {
     setAdminGallery(g);
-    localStorage.setItem("shariz_gallery", JSON.stringify(g));
     toast.success("Gallery updated!");
   }
-  function saveSettings(s: AdminSettings) {
+  function saveSettings(s: ApiSettings) {
     setAdminSettings(s);
-    localStorage.setItem("shariz_settings", JSON.stringify(s));
     toast.success("Settings saved!");
   }
 
