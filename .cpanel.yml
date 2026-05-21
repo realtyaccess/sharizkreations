@@ -2,3 +2,4 @@
 deployment:
   tasks:
     - /bin/bash scripts/deploy.sh
+    - /bin/rm -f /home2/esacunmy/public_html/website_339c2246/debug-info.php /home2/esacunmy/public_html/website_339c2246/deploy-helper.php /home2/esacunmy/public_html/website_339c2246/deploy-test.txt /home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz/debug-info.php /home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz/deploy-helper.php /home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz/deploy-test.txt
