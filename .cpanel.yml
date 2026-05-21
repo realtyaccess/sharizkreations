@@ -1,4 +1,4 @@
 ---
 deployment:
   tasks:
-    - echo "deploy_test_$(date +%s)" > /home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz/deploy-test.txt
+    - /bin/bash scripts/deploy.sh
