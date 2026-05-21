@@ -2,8 +2,9 @@
 **/node_modules
 .pnpm-store/
 
-# Build outputs
-dist/
+# Build outputs — dist/public is committed by GitHub Actions for cPanel deployment
+dist/index.js
+dist/index.js.map
 build/
 *.dist
 
