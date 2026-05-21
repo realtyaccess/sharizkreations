@@ -3,4 +3,5 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz
     - /bin/mkdir -p $DEPLOYPATH
+    - /bin/rm -rf $DEPLOYPATH/assets
     - /bin/cp -r dist/public/. $DEPLOYPATH/
