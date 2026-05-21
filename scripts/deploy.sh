@@ -1,40 +1,32 @@
 #!/bin/bash
-LOG="/home2/esacunmy/sharizkreations-repo/deploy-debug.log"
-echo "=== Deploy started at $(date) ===" > "$LOG"
-echo "Running as: $(whoami)" >> "$LOG"
-echo "Working dir: $(pwd)" >> "$LOG"
-echo "Script dir: $(dirname "$0")" >> "$LOG"
+LOG_FILE="$(dirname "$0")/../deploy-debug.log"
+exec 2>&1
+
+echo "=== Deploy started at $(date) ===" | tee "$LOG_FILE"
+echo "Running as: $(whoami 2>/dev/null || id)" | tee -a "$LOG_FILE"
+echo "Working dir: $(pwd)" | tee -a "$LOG_FILE"
 
 DEPLOYPATH="/home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz"
 REPOPATH="/home2/esacunmy/sharizkreations-repo"
 
-echo "DEPLOYPATH: $DEPLOYPATH" >> "$LOG"
-echo "REPOPATH: $REPOPATH" >> "$LOG"
+echo "DEPLOYPATH exists: $([ -d "$DEPLOYPATH" ] && echo YES || echo NO)" | tee -a "$LOG_FILE"
+echo "DEPLOYPATH writable: $([ -w "$DEPLOYPATH" ] && echo YES || echo NO)" | tee -a "$LOG_FILE"
+echo "dist/public exists: $([ -d "$REPOPATH/dist/public" ] && echo YES || echo NO)" | tee -a "$LOG_FILE"
 
-# Check if DEPLOYPATH exists and is writable
-if [ -d "$DEPLOYPATH" ]; then
-    echo "DEPLOYPATH exists: YES" >> "$LOG"
-    ls -la "$DEPLOYPATH/" >> "$LOG" 2>&1
-else
-    echo "DEPLOYPATH exists: NO" >> "$LOG"
-fi
+# List the DEPLOYPATH
+echo "--- DEPLOYPATH contents ---" | tee -a "$LOG_FILE"
+ls -la "$DEPLOYPATH/" 2>&1 | tee -a "$LOG_FILE"
 
-# Check if REPOPATH/dist/public exists
-if [ -d "$REPOPATH/dist/public" ]; then
-    echo "dist/public exists: YES" >> "$LOG"
-    ls "$REPOPATH/dist/public/" >> "$LOG" 2>&1
-else
-    echo "dist/public exists: NO" >> "$LOG"
-fi
+# Try to write a test file
+echo "test-$(date +%s)" > "$DEPLOYPATH/deploy-test.txt" 2>&1
+echo "Write test exit code: $?" | tee -a "$LOG_FILE"
 
-# Try to write a test file to DEPLOYPATH
-echo "test" > "$DEPLOYPATH/deploy-test.txt" 2>> "$LOG"
-if [ $? -eq 0 ]; then
-    echo "Write test: SUCCESS" >> "$LOG"
-    rm -f "$DEPLOYPATH/deploy-test.txt"
-else
-    echo "Write test: FAILED" >> "$LOG"
-fi
+echo "=== Debug complete ===" | tee -a "$LOG_FILE"
 
-echo "=== Deploy debug complete ===" >> "$LOG"
-cat "$LOG"
+# Now commit the log back to the repo so we can read it
+cd "$REPOPATH"
+git config user.email "deploy@sharizkreations.com" 2>/dev/null
+git config user.name "Deploy Debug" 2>/dev/null
+git add deploy-debug.log 2>/dev/null
+git commit -m "debug: deploy log [skip ci]" 2>/dev/null
+echo "Log committed: $?" | tee -a "$LOG_FILE"
