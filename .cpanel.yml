@@ -1,10 +1,4 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz
-    - /bin/mkdir -p $DEPLOYPATH
-    - /bin/rm -rf $DEPLOYPATH/assets
-    - /bin/rm -f $DEPLOYPATH/index.html
-    - /bin/cp -f dist/public/index.html $DEPLOYPATH/index.html
-    - /bin/cp -rf dist/public/assets $DEPLOYPATH/assets
-    - /bin/cp -f dist/public/.htaccess $DEPLOYPATH/.htaccess
+    - export DEPLOYPATH=/home2/esacunmy/website-7b890dc7.esa.cun.mybluehost.me/shariz && /bin/mkdir -p $DEPLOYPATH && /bin/rm -rf $DEPLOYPATH/assets && /bin/rm -f $DEPLOYPATH/index.html && /bin/cp -f dist/public/index.html $DEPLOYPATH/index.html && /bin/cp -rf dist/public/assets $DEPLOYPATH/assets && /bin/cp -f dist/public/.htaccess $DEPLOYPATH/.htaccess && echo "Deploy complete to $DEPLOYPATH"
