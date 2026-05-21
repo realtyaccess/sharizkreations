@@ -9,6 +9,8 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { Instagram, MapPin, Star, ChevronDown, X, Menu, ShoppingBag, Sparkles, Heart, Upload, MessageCircle, Check, Calendar, DollarSign, Phone } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
+import { useCurrency, parseCadPrice } from "@/contexts/CurrencyContext";
+import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
 const WHATSAPP_NUMBER = "14039867064";
@@ -283,6 +285,50 @@ function useReveal() {
   return ref;
 }
 
+// ─── Currency Price Helpers ──────────────────────────────────────────────────
+function ProductPrice({ price }: { price: string }) {
+  const { formatPrice, currency } = useCurrency();
+  const cad = parseCadPrice(price);
+  if (cad === null) return <span className="text-xs text-[#D4AF37] border border-[#D4AF37]/40 px-2 py-1 whitespace-nowrap" style={{ fontFamily: "'Jost', sans-serif" }}>{price}</span>;
+  const isFrom = price.toLowerCase().includes("from");
+  return (
+    <span className="text-xs text-[#D4AF37] border border-[#D4AF37]/40 px-2 py-1 whitespace-nowrap" style={{ fontFamily: "'Jost', sans-serif" }}>
+      {isFrom ? "From " : ""}{formatPrice(cad)}
+      {currency.code !== "CAD" && <span className="opacity-50 ml-1 text-[0.7em]">{currency.code}</span>}
+    </span>
+  );
+}
+
+function ProductPriceInline({ price }: { price: string }) {
+  const { formatPrice, currency } = useCurrency();
+  const cad = parseCadPrice(price);
+  if (cad === null) return <>{price}</>;
+  const isFrom = price.toLowerCase().includes("from");
+  return <>{isFrom ? "From " : ""}{formatPrice(cad)}{currency.code !== "CAD" && <span className="opacity-50 ml-1 text-[0.75em]">{currency.code}</span>}</>;
+}
+
+function TierPriceDisplay({ price }: { price: string }) {
+  const { formatPrice, currency } = useCurrency();
+  const cad = parseCadPrice(price);
+  if (cad === null) return <span className="text-[#D4AF37] text-xs font-medium whitespace-nowrap" style={{ fontFamily: "'Jost', sans-serif" }}>{price}</span>;
+  const isFrom = price.toLowerCase().includes("from");
+  return (
+    <span className="text-[#D4AF37] text-xs font-medium whitespace-nowrap" style={{ fontFamily: "'Jost', sans-serif" }}>
+      {isFrom ? "From " : ""}{formatPrice(cad)}
+      {currency.code !== "CAD" && <span className="opacity-40 ml-1 text-[0.7em]">{currency.code}</span>}
+    </span>
+  );
+}
+
+function PricingNote() {
+  const { currency } = useCurrency();
+  return (
+    <p className="text-center text-cream/30 text-xs mt-8" style={{ fontFamily: "'Jost', sans-serif" }}>
+      * Prices shown in {currency.name} ({currency.code}). Base prices in CAD. Shipping available across Canada. International shipping on request.
+    </p>
+  );
+}
+
 // ─── Navigation ────────────────────────────────────────────────────────────────
 function Navigation() {
   const [scrolled, setScrolled] = useState(false);
@@ -315,6 +361,7 @@ function Navigation() {
             ))}
           </div>
           <div className="flex items-center gap-3">
+            <div className="hidden lg:block"><CurrencySwitcher /></div>
             <a href={getWhatsAppLink("Hi Shaz! I'd like to place an order.")} target="_blank" rel="noopener noreferrer" title="WhatsApp Shaz" className="hidden lg:flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300 hover:scale-110" style={{ background: "rgba(37,211,102,0.15)", border: "1px solid rgba(37,211,102,0.35)" }}>
               <svg viewBox="0 0 24 24" fill="#25D166" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             </a>
@@ -336,6 +383,7 @@ function Navigation() {
               <button onClick={() => setMenuOpen(false)} className="text-cream/70 hover:text-[#D4AF37]"><X size={24} /></button>
             </div>
             <div className="flex flex-col items-center justify-center flex-1 gap-8">
+              <div className="mb-2"><CurrencySwitcher /></div>
               {navLinks.map((link, i) => (
                 <motion.button key={link} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} onClick={() => scrollTo(link)} className="text-2xl font-light tracking-widest uppercase text-cream/80 hover:text-[#D4AF37] transition-colors" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                   {link}
@@ -515,7 +563,7 @@ function ProductsSection() {
                     <h3 className="text-xl font-light text-cream" style={{ fontFamily: "'Cormorant Garamond', serif" }}>{product.name}</h3>
                     <p className="text-xs text-cream/50 mt-0.5" style={{ fontFamily: "'Jost', sans-serif" }}>{product.subtitle}</p>
                   </div>
-                  <span className="text-xs text-[#D4AF37] border border-[#D4AF37]/40 px-2 py-1 whitespace-nowrap" style={{ fontFamily: "'Jost', sans-serif" }}>{product.price}</span>
+                  <ProductPrice price={product.price} />
                 </div>
                 <p className="text-cream/50 text-sm leading-relaxed mt-3 line-clamp-2" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>{product.description}</p>
                 <button className="mt-4 text-[10px] tracking-widest uppercase text-[#D4AF37] hover:text-[#F0D060] transition-colors flex items-center gap-2" style={{ fontFamily: "'Jost', sans-serif" }}>
@@ -548,7 +596,7 @@ function ProductsSection() {
                   <p className="section-label mb-3">{selected.tag}</p>
                   <h3 className="text-3xl font-light text-cream mb-1" style={{ fontFamily: "'Cormorant Garamond', serif" }}>{selected.name}</h3>
                   <p className="text-sm text-cream/50 mb-1" style={{ fontFamily: "'Jost', sans-serif" }}>{selected.subtitle}</p>
-                  <p className="text-[#D4AF37] font-medium mb-4" style={{ fontFamily: "'Jost', sans-serif" }}>{selected.price}</p>
+                  <p className="text-[#D4AF37] font-medium mb-4" style={{ fontFamily: "'Jost', sans-serif" }}><ProductPriceInline price={selected.price} /></p>
                   <div className="gold-divider" style={{ margin: "0 0 1rem 0" }} />
                   <p className="text-cream/70 text-sm leading-relaxed" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>{selected.description}</p>
                 </div>
@@ -604,7 +652,7 @@ function PricingSection() {
                       <Check size={12} className="text-[#D4AF37] shrink-0" />
                       <span className="text-cream/70 text-sm" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>{item.label}</span>
                     </div>
-                    <span className="text-[#D4AF37] text-xs font-medium whitespace-nowrap" style={{ fontFamily: "'Jost', sans-serif" }}>{item.price}</span>
+                    <TierPriceDisplay price={item.price} />
                   </li>
                 ))}
               </ul>
@@ -614,7 +662,7 @@ function PricingSection() {
             </motion.div>
           ))}
         </div>
-        <p className="text-center text-cream/30 text-xs mt-8" style={{ fontFamily: "'Jost', sans-serif" }}>* All prices in CAD. Shipping available across Canada. International shipping on request.</p>
+        <PricingNote />
       </div>
     </section>
   );
@@ -1479,7 +1527,7 @@ function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-6 border-t flex flex-col md:flex-row items-center justify-between gap-2" style={{ borderColor: "rgba(212,175,55,0.1)" }}>
-          <p className="text-cream/30 text-xs" style={{ fontFamily: "'Jost', sans-serif" }}>© 2026 ShaRiz Kreations. All rights reserved.</p>
+          <p className="text-cream/30 text-xs" style={{ fontFamily: "'Jost', sans-serif" }}>© 2026 ShaRiz Kreations. All rights reserved. Future Eye.</p>
           <div className="flex items-center gap-4">
             <Link href="/care-instructions" className="text-cream/30 text-xs hover:text-[#D4AF37] transition-colors" style={{ fontFamily: "'Jost', sans-serif" }}>Care Instructions</Link>
             <span className="text-cream/20 text-xs">·</span>
