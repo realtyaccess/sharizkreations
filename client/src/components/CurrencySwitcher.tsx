@@ -12,6 +12,14 @@ export function CurrencySwitcher({ compact = false }: { compact?: boolean }) {
   const { currency, setCurrency } = useCurrency();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  // Detect mobile for compact display
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // Close on outside click
   useEffect(() => {
@@ -22,14 +30,16 @@ export function CurrencySwitcher({ compact = false }: { compact?: boolean }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const isCompact = compact || isMobile;
+
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 hover:scale-105"
         style={{
-          background: "rgba(212,175,55,0.12)",
-          border: "1px solid rgba(212,175,55,0.3)",
+          background: "rgba(212,175,55,0.15)",
+          border: "1px solid rgba(212,175,55,0.4)",
           color: "#D4AF37",
           fontFamily: "'Jost', sans-serif",
           letterSpacing: "0.05em",
@@ -37,18 +47,20 @@ export function CurrencySwitcher({ compact = false }: { compact?: boolean }) {
         title="Switch currency"
       >
         <span className="text-sm leading-none">{currency.flag}</span>
-        {!compact && <span>{currency.code}</span>}
+        {!isCompact && <span>{currency.code}</span>}
+        {isCompact && <span className="text-[10px] font-bold">{currency.code}</span>}
         <ChevronDown size={11} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
         <div
-          className="absolute right-0 top-full mt-2 z-[200] rounded-xl overflow-hidden shadow-2xl"
+          className="absolute right-0 top-full mt-2 z-[300] rounded-xl overflow-hidden shadow-2xl"
           style={{
-            background: "rgba(18,14,10,0.97)",
-            border: "1px solid rgba(212,175,55,0.2)",
-            backdropFilter: "blur(20px)",
-            minWidth: "180px",
+            background: "rgba(12,10,7,0.98)",
+            border: "1px solid rgba(212,175,55,0.3)",
+            backdropFilter: "blur(24px)",
+            minWidth: "190px",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(212,175,55,0.1)",
           }}
         >
           <div className="px-3 pt-3 pb-1">
