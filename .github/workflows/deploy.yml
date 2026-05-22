@@ -1,4 +1,4 @@
-name: Build & Deploy to Bluehost via cPanel Git
+name: Build & Deploy to Bluehost via FTP
 on:
   push:
     branches:
@@ -13,7 +13,7 @@ env:
 
 jobs:
   build-and-deploy:
-    name: Build React app and trigger cPanel deploy
+    name: Build React app and deploy via FTP
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -39,33 +39,17 @@ jobs:
       - name: Strip Manus runtime from index.html (clean for production)
         run: python3 scripts/prepare-deploy.py
 
-      - name: Commit built files to repo
-        run: |
-          git config user.name "ShaRiz Deploy"
-          git config user.email "deploy@sharizkreations.com"
-          git add -f dist/public/
-          if git diff --staged --quiet; then
-            echo "No changes to built files — skipping commit"
-          else
-            git commit -m "chore: update built files [skip ci]"
-            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
-            echo "Built files committed and pushed"
-          fi
-
-      - name: Trigger cPanel Git pull via API
-        run: |
-          echo "=== Triggering cPanel Git pull ==="
-          CPANEL_USER="${{ secrets.CPANEL_USER }}"
-          CPANEL_TOKEN="${{ secrets.CPANEL_TOKEN }}"
-          CPANEL_HOST="box2324.bluehost.com"
-          if [ -z "$CPANEL_TOKEN" ]; then
-            echo "CPANEL_TOKEN not set — skipping cPanel trigger"
-            echo "Please add CPANEL_USER and CPANEL_TOKEN secrets to enable auto-deploy"
-            exit 0
-          fi
-          RESPONSE=$(curl -sk \
-            -H "Authorization: cpanel ${CPANEL_USER}:${CPANEL_TOKEN}" \
-            "https://${CPANEL_HOST}:2083/execute/VersionControlDeployment/create?repository_root=%2Fhome2%2Fesacunmy%2Fsharizkreations-repo" \
-            2>&1)
-          echo "cPanel response: $RESPONSE"
-          echo "Deploy triggered!"
+      - name: Deploy to Bluehost via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: dist/public/
+          server-dir: /public_html/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/__manus__/**
+            **/.gitkeep
