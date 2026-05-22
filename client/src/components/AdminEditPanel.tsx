@@ -1,18 +1,37 @@
 import { useState, useRef } from "react";
-import { useAdmin } from "@/contexts/AdminContext";
-import {
-  ApiProduct, ApiReview, ApiGalleryItem, ApiSettings,
-  adminUpdateProduct, adminCreateProduct, adminDeleteProduct,
-  adminCreateReview, adminUpdateReview, adminDeleteReview,
-  adminAddGalleryItem, adminDeleteGalleryItem,
-  adminSaveSettings, adminUploadImage,
-} from "@/lib/api";
 
-// ─── Re-export types for Home.tsx compatibility ───────────────────────────────
-export type AdminProduct = ApiProduct;
-export type AdminReview = ApiReview;
-export type AdminGalleryPhoto = ApiGalleryItem;
-export type AdminSettings = ApiSettings;
+// ─── Types ────────────────────────────────────────────────────────────────────
+export interface AdminProduct {
+  id: number;
+  name: string;
+  subtitle: string;
+  tag: string;
+  price: string;
+  description: string;
+  availability: string;
+  images: string[];
+  waMessage?: string;
+}
+
+export interface AdminReview {
+  id: number;
+  name: string;
+  rating: number;
+  text: string;
+  date: string;
+}
+
+export interface AdminGalleryPhoto {
+  url: string;
+  caption?: string;
+}
+
+export interface AdminSettings {
+  heroTitle: string;
+  heroSubtitle: string;
+  whatsapp: string;
+  instagram: string;
+}
 
 type PanelMode = "products" | "reviews" | "gallery" | "settings";
 
@@ -21,11 +40,11 @@ interface AdminEditPanelProps {
   onClose: () => void;
   products: AdminProduct[];
   reviews: AdminReview[];
-  galleryPhotos: ApiGalleryItem[];
+  galleryPhotos: string[];
   settings: AdminSettings;
   onSaveProducts: (products: AdminProduct[]) => void;
   onSaveReviews: (reviews: AdminReview[]) => void;
-  onSaveGallery: (photos: ApiGalleryItem[]) => void;
+  onSaveGallery: (photos: string[]) => void;
   onSaveSettings: (settings: AdminSettings) => void;
 }
 
@@ -95,38 +114,24 @@ export function AdminEditPanel({
 
 // ─── Products Editor ──────────────────────────────────────────────────────────
 function ProductsEditor({ products, onSave }: { products: AdminProduct[]; onSave: (p: AdminProduct[]) => void }) {
-  const { token } = useAdmin();
   const [items, setItems] = useState<AdminProduct[]>(products);
   const [editing, setEditing] = useState<number | null>(null);
-  const [saving, setSaving] = useState<number | null>(null);
-  const [saved, setSaved] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   function updateItem(id: number, field: keyof AdminProduct, value: any) {
     setItems(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
   }
 
-  async function handleSaveProduct(product: AdminProduct) {
-    if (!token) return;
-    setSaving(product.id);
-    setError(null);
-    try {
-      await adminUpdateProduct(token, product.id, product);
-      setSaved(product.id);
-      setTimeout(() => setSaved(null), 2000);
-      onSave(items);
-    } catch (err) {
-      setError("Failed to save. Please try again.");
-    } finally {
-      setSaving(null);
-    }
+  function handleSave() {
+    onSave(items);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   }
 
   const availOptions = ["Taking Orders", "Limited Stock", "Always Available", "Sold Out"];
 
   return (
     <div>
-      {error && <div style={{ color: "#ef4444", fontSize: "0.8rem", marginBottom: "0.75rem", padding: "0.5rem", background: "#ef444420", borderRadius: 6 }}>{error}</div>}
       {items.map(product => (
         <div key={product.id} style={{
           background: "#161616",
@@ -141,14 +146,12 @@ function ProductsEditor({ products, onSave }: { products: AdminProduct[]; onSave
             onClick={() => setEditing(editing === product.id ? null : product.id)}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              {product.images?.[0] && (
+              {product.images[0] && (
                 <img src={product.images[0]} alt={product.name} style={{ width: 44, height: 44, borderRadius: 6, objectFit: "cover" }} />
               )}
               <div>
                 <p style={{ color: "#f5f0e8", fontSize: "0.85rem", fontWeight: 500, margin: 0 }}>{product.name}</p>
-                <p style={{ color: "#D4AF37", fontSize: "0.75rem", margin: "0.1rem 0 0" }}>
-                  {product.actual_price ? `From $${product.actual_price} CAD` : "Custom Quote"} · {product.availability}
-                </p>
+                <p style={{ color: "#D4AF37", fontSize: "0.75rem", margin: "0.1rem 0 0" }}>{product.price}</p>
               </div>
             </div>
             <span style={{ color: "#555", fontSize: "0.8rem" }}>{editing === product.id ? "▲" : "▼"}</span>
@@ -158,10 +161,10 @@ function ProductsEditor({ products, onSave }: { products: AdminProduct[]; onSave
           {editing === product.id && (
             <div style={{ padding: "0 1rem 1rem", borderTop: "1px solid #222" }}>
               <Field label="Product Name" value={product.name} onChange={v => updateItem(product.id, "name", v)} />
-              <Field label="Subtitle" value={product.subtitle || ""} onChange={v => updateItem(product.id, "subtitle", v)} />
-              <Field label="Tag / Category" value={product.tag || ""} onChange={v => updateItem(product.id, "tag", v)} />
-              <Field label="Price (CAD, numbers only)" value={String(product.actual_price || "")} onChange={v => updateItem(product.id, "actual_price", parseFloat(v) || null)} />
-              <Field label="Description" value={product.description || ""} onChange={v => updateItem(product.id, "description", v)} multiline />
+              <Field label="Subtitle" value={product.subtitle} onChange={v => updateItem(product.id, "subtitle", v)} />
+              <Field label="Tag / Category" value={product.tag} onChange={v => updateItem(product.id, "tag", v)} />
+              <Field label="Price (e.g. CAD 45)" value={product.price} onChange={v => updateItem(product.id, "price", v)} />
+              <Field label="Description" value={product.description} onChange={v => updateItem(product.id, "description", v)} multiline />
 
               <div style={{ marginTop: "0.75rem" }}>
                 <label style={labelStyle}>Availability</label>
@@ -177,110 +180,57 @@ function ProductsEditor({ products, onSave }: { products: AdminProduct[]; onSave
               <div style={{ marginTop: "0.75rem" }}>
                 <label style={labelStyle}>Product Images</label>
                 <ImageListEditor
-                  images={product.images || []}
+                  images={product.images}
                   onChange={imgs => updateItem(product.id, "images", imgs)}
                 />
               </div>
-
-              <button
-                onClick={() => handleSaveProduct(product)}
-                disabled={saving === product.id}
-                style={{
-                  width: "100%",
-                  background: saved === product.id ? "#166534" : "linear-gradient(135deg, #D4AF37, #A88A20)",
-                  color: saved === product.id ? "#86efac" : "#0a0a0a",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "0.6rem",
-                  fontWeight: 700,
-                  fontSize: "0.8rem",
-                  cursor: saving === product.id ? "wait" : "pointer",
-                  marginTop: "0.75rem",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase" as const,
-                }}
-              >
-                {saving === product.id ? "Saving..." : saved === product.id ? "✓ Saved!" : "Save This Product"}
-              </button>
             </div>
           )}
         </div>
       ))}
+
+      <SaveBtn saved={saved} onClick={handleSave} />
     </div>
   );
 }
 
 // ─── Reviews Editor ───────────────────────────────────────────────────────────
 function ReviewsEditor({ reviews, onSave }: { reviews: AdminReview[]; onSave: (r: AdminReview[]) => void }) {
-  const { token } = useAdmin();
   const [items, setItems] = useState<AdminReview[]>(reviews);
   const [adding, setAdding] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [newReview, setNewReview] = useState<{ customer_name: string; review: string; stars: number; product_name: string }>({
-    customer_name: "", review: "", stars: 5, product_name: "",
-  });
+  const [newReview, setNewReview] = useState<Partial<AdminReview>>({ rating: 5, date: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }) });
   const fileRef = useRef<HTMLInputElement>(null);
-
-  async function handleDeleteReview(id: number) {
-    if (!token || !confirm("Delete this review?")) return;
-    try {
-      await adminDeleteReview(token, id);
-      const updated = items.filter(r => r.id !== id);
-      setItems(updated);
-      onSave(updated);
-    } catch {
-      setError("Failed to delete review.");
-    }
-  }
-
-  async function handleAddReview() {
-    if (!token || !newReview.customer_name || !newReview.review) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const result = await adminCreateReview(token, newReview);
-      const newItem: AdminReview = {
-        id: result.id,
-        customer_name: newReview.customer_name,
-        review: newReview.review,
-        stars: newReview.stars,
-        product_name: newReview.product_name || null,
-        is_approved: 1,
-        is_visible: 1,
-        sort_order: 0,
-        created_at: new Date().toISOString(),
-      };
-      const updated = [newItem, ...items];
-      setItems(updated);
-      onSave(updated);
-      setNewReview({ customer_name: "", review: "", stars: 5, product_name: "" });
-      setAdding(false);
-    } catch {
-      setError("Failed to add review.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleUpdateReview(review: AdminReview) {
-    if (!token) return;
-    try {
-      await adminUpdateReview(token, review.id, review);
-      onSave(items);
-    } catch {
-      setError("Failed to update review.");
-    }
-  }
 
   function updateItem(id: number, field: keyof AdminReview, value: any) {
     setItems(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
   }
 
+  function deleteItem(id: number) {
+    if (confirm("Delete this review?")) {
+      setItems(prev => prev.filter(r => r.id !== id));
+    }
+  }
+
+  function addReview() {
+    if (!newReview.name || !newReview.text) return;
+    const review: AdminReview = {
+      id: Date.now(),
+      name: newReview.name!,
+      rating: newReview.rating || 5,
+      text: newReview.text!,
+      date: newReview.date || new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+    };
+    setItems(prev => [review, ...prev]);
+    setNewReview({ rating: 5, date: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }) });
+    setAdding(false);
+  }
+
   async function handleScreenshot(file: File) {
     setOcrLoading(true);
     try {
+      // Use Tesseract.js in browser
       const { createWorker } = await import("tesseract.js");
       const worker = await createWorker("eng");
       const url = URL.createObjectURL(file);
@@ -288,23 +238,27 @@ function ReviewsEditor({ reviews, onSave }: { reviews: AdminReview[]; onSave: (r
       await worker.terminate();
       URL.revokeObjectURL(url);
       const cleaned = text.replace(/\s+/g, " ").trim();
-      setNewReview(prev => ({ ...prev, review: cleaned }));
+      setNewReview(prev => ({ ...prev, text: cleaned }));
       setAdding(true);
-    } catch {
+    } catch (err) {
       alert("Could not read text from image. Please type the review manually.");
     } finally {
       setOcrLoading(false);
     }
   }
 
+  function handleSave() {
+    onSave(items);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
   return (
     <div>
-      {error && <div style={{ color: "#ef4444", fontSize: "0.8rem", marginBottom: "0.75rem", padding: "0.5rem", background: "#ef444420", borderRadius: 6 }}>{error}</div>}
-
       {/* Add review buttons */}
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
         <button onClick={() => setAdding(!adding)} style={goldBtnStyle}>
-          + Add Review
+          + Add Review Manually
         </button>
         <button
           onClick={() => fileRef.current?.click()}
@@ -326,19 +280,21 @@ function ReviewsEditor({ reviews, onSave }: { reviews: AdminReview[]; onSave: (r
       {adding && (
         <div style={{ background: "#161616", border: "1px solid #D4AF3740", borderRadius: 10, padding: "1rem", marginBottom: "1rem" }}>
           <h4 style={{ color: "#D4AF37", fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 0.75rem" }}>New Review</h4>
-          <Field label="Reviewer Name *" value={newReview.customer_name} onChange={v => setNewReview(p => ({ ...p, customer_name: v }))} />
-          <Field label="Review Text *" value={newReview.review} onChange={v => setNewReview(p => ({ ...p, review: v }))} multiline />
-          <Field label="Product (optional)" value={newReview.product_name} onChange={v => setNewReview(p => ({ ...p, product_name: v }))} />
-          <div style={{ marginTop: "0.5rem" }}>
-            <label style={labelStyle}>Star Rating</label>
-            <select value={newReview.stars} onChange={e => setNewReview(p => ({ ...p, stars: Number(e.target.value) }))} style={inputStyle}>
-              {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} Stars</option>)}
-            </select>
+          <Field label="Reviewer Name *" value={newReview.name || ""} onChange={v => setNewReview(p => ({ ...p, name: v }))} />
+          <Field label="Review Text *" value={newReview.text || ""} onChange={v => setNewReview(p => ({ ...p, text: v }))} multiline />
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <div style={{ flex: 1 }}>
+              <label style={labelStyle}>Star Rating</label>
+              <select value={newReview.rating} onChange={e => setNewReview(p => ({ ...p, rating: Number(e.target.value) }))} style={inputStyle}>
+                {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} Stars</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <Field label="Date" value={newReview.date || ""} onChange={v => setNewReview(p => ({ ...p, date: v }))} />
+            </div>
           </div>
           <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
-            <button onClick={handleAddReview} disabled={saving} style={goldBtnStyle}>
-              {saving ? "Saving..." : "Add Review ⭐"}
-            </button>
+            <button onClick={addReview} style={goldBtnStyle}>Add Review ⭐</button>
             <button onClick={() => setAdding(false)} style={{ ...goldBtnStyle, background: "transparent", border: "1px solid #333", color: "#888" }}>Cancel</button>
           </div>
         </div>
@@ -349,87 +305,65 @@ function ReviewsEditor({ reviews, onSave }: { reviews: AdminReview[]; onSave: (r
         <div key={review.id} style={{ background: "#161616", border: "1px solid #222", borderRadius: 10, padding: "0.875rem 1rem", marginBottom: "0.75rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
             <div>
-              <p style={{ color: "#f5f0e8", fontSize: "0.85rem", fontWeight: 500, margin: 0 }}>{review.customer_name}</p>
-              <p style={{ color: "#D4AF37", fontSize: "0.75rem", margin: "0.1rem 0 0" }}>{"★".repeat(review.stars)}{"☆".repeat(5 - review.stars)}</p>
+              <p style={{ color: "#f5f0e8", fontSize: "0.85rem", fontWeight: 500, margin: 0 }}>{review.name}</p>
+              <p style={{ color: "#D4AF37", fontSize: "0.75rem", margin: "0.1rem 0 0" }}>{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)} · {review.date}</p>
             </div>
-            <button onClick={() => handleDeleteReview(review.id)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.8rem", padding: "0.2rem" }}>🗑</button>
+            <button onClick={() => deleteItem(review.id)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.8rem", padding: "0.2rem" }}>🗑</button>
           </div>
-          <Field label="Review Text" value={review.review} onChange={v => updateItem(review.id, "review", v)} multiline />
+          <Field label="Review Text" value={review.text} onChange={v => updateItem(review.id, "text", v)} multiline />
           <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
             <div style={{ flex: 1 }}>
               <label style={labelStyle}>Name</label>
-              <input value={review.customer_name} onChange={e => updateItem(review.id, "customer_name", e.target.value)} style={inputStyle} />
+              <input value={review.name} onChange={e => updateItem(review.id, "name", e.target.value)} style={inputStyle} />
             </div>
             <div style={{ flex: 1 }}>
               <label style={labelStyle}>Stars</label>
-              <select value={review.stars} onChange={e => updateItem(review.id, "stars", Number(e.target.value))} style={inputStyle}>
+              <select value={review.rating} onChange={e => updateItem(review.id, "rating", Number(e.target.value))} style={inputStyle}>
                 {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} ★</option>)}
               </select>
             </div>
           </div>
-          <button
-            onClick={() => handleUpdateReview(review)}
-            style={{ ...goldBtnStyle, marginTop: "0.5rem", width: "100%", borderRadius: 6 }}
-          >
-            Save Review
-          </button>
         </div>
       ))}
+
+      <SaveBtn saved={saved} onClick={handleSave} />
     </div>
   );
 }
 
 // ─── Gallery Editor ───────────────────────────────────────────────────────────
-function GalleryEditor({ photos, onSave }: { photos: ApiGalleryItem[]; onSave: (p: ApiGalleryItem[]) => void }) {
-  const { token } = useAdmin();
-  const [items, setItems] = useState<ApiGalleryItem[]>(photos);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+function GalleryEditor({ photos, onSave }: { photos: string[]; onSave: (p: string[]) => void }) {
+  const [items, setItems] = useState<string[]>(photos);
+  const [saved, setSaved] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  async function handleRemovePhoto(item: ApiGalleryItem) {
-    if (!token || !confirm("Remove this photo from gallery?")) return;
-    try {
-      await adminDeleteGalleryItem(token, item.id);
-      const updated = items.filter(i => i.id !== item.id);
-      setItems(updated);
-      onSave(updated);
-    } catch {
-      setError("Failed to remove photo.");
+  function removePhoto(idx: number) {
+    if (confirm("Remove this photo from gallery?")) {
+      setItems(prev => prev.filter((_, i) => i !== idx));
     }
   }
 
-  async function handleUpload(files: FileList) {
-    if (!token) return;
-    setUploading(true);
-    setError(null);
-    try {
-      for (const file of Array.from(files)) {
-        const url = await adminUploadImage(token, file);
-        const result = await adminAddGalleryItem(token, url);
-        const newItem: ApiGalleryItem = { id: result.id, image_url: url, caption: null, sort_order: items.length + 1, is_visible: 1 };
-        setItems(prev => {
-          const updated = [newItem, ...prev];
-          onSave(updated);
-          return updated;
-        });
-      }
-    } catch {
-      setError("Upload failed. Please try again.");
-    } finally {
-      setUploading(false);
-    }
+  function handleUpload(files: FileList) {
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const url = e.target?.result as string;
+        setItems(prev => [url, ...prev]);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function handleSave() {
+    onSave(items);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   }
 
   return (
     <div>
-      {error && <div style={{ color: "#ef4444", fontSize: "0.8rem", marginBottom: "0.75rem", padding: "0.5rem", background: "#ef444420", borderRadius: 6 }}>{error}</div>}
-      <button
-        onClick={() => fileRef.current?.click()}
-        disabled={uploading}
-        style={{ ...goldBtnStyle, marginBottom: "1rem" }}
-      >
-        {uploading ? "Uploading..." : "+ Upload Photos"}
+      <button onClick={() => fileRef.current?.click()} style={{ ...goldBtnStyle, marginBottom: "1rem" }}>
+        + Upload Photos
       </button>
       <input
         ref={fileRef}
@@ -441,11 +375,11 @@ function GalleryEditor({ photos, onSave }: { photos: ApiGalleryItem[]; onSave: (
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem", marginBottom: "1rem" }}>
-        {items.map((item) => (
-          <div key={item.id} style={{ position: "relative", aspectRatio: "1", borderRadius: 8, overflow: "hidden", border: "1px solid #222" }}>
-            <img src={item.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        {items.map((src, i) => (
+          <div key={i} style={{ position: "relative", aspectRatio: "1", borderRadius: 8, overflow: "hidden", border: "1px solid #222" }}>
+            <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             <button
-              onClick={() => handleRemovePhoto(item)}
+              onClick={() => removePhoto(i)}
               style={{
                 position: "absolute",
                 top: 4,
@@ -466,83 +400,56 @@ function GalleryEditor({ photos, onSave }: { photos: ApiGalleryItem[]; onSave: (
           </div>
         ))}
       </div>
+
+      <SaveBtn saved={saved} onClick={handleSave} />
     </div>
   );
 }
 
 // ─── Settings Editor ──────────────────────────────────────────────────────────
 function SettingsEditor({ settings, onSave }: { settings: AdminSettings; onSave: (s: AdminSettings) => void }) {
-  const { token } = useAdmin();
   const [form, setForm] = useState(settings);
-  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  async function handleSave() {
-    if (!token) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await adminSaveSettings(token, form);
-      onSave(form);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch {
-      setError("Failed to save settings.");
-    } finally {
-      setSaving(false);
-    }
+  function handleSave() {
+    onSave(form);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   }
 
   return (
     <div>
-      {error && <div style={{ color: "#ef4444", fontSize: "0.8rem", marginBottom: "0.75rem", padding: "0.5rem", background: "#ef444420", borderRadius: 6 }}>{error}</div>}
-      <Field label="Hero Title" value={form.heroTitle || ""} onChange={v => setForm(p => ({ ...p, heroTitle: v }))} />
-      <Field label="Hero Subtitle" value={form.heroSubtitle || ""} onChange={v => setForm(p => ({ ...p, heroSubtitle: v }))} />
-      <Field label="WhatsApp Number (with country code)" value={form.whatsapp || ""} onChange={v => setForm(p => ({ ...p, whatsapp: v }))} />
-      <Field label="Instagram URL" value={form.instagram || ""} onChange={v => setForm(p => ({ ...p, instagram: v }))} />
-      <Field label="Email Address" value={form.email || ""} onChange={v => setForm(p => ({ ...p, email: v }))} />
-      <SaveBtn saved={saved} saving={saving} onClick={handleSave} />
+      <Field label="Hero Title" value={form.heroTitle} onChange={v => setForm(p => ({ ...p, heroTitle: v }))} />
+      <Field label="Hero Subtitle" value={form.heroSubtitle} onChange={v => setForm(p => ({ ...p, heroSubtitle: v }))} />
+      <Field label="WhatsApp Number (with country code)" value={form.whatsapp} onChange={v => setForm(p => ({ ...p, whatsapp: v }))} />
+      <Field label="Instagram Handle (without @)" value={form.instagram} onChange={v => setForm(p => ({ ...p, instagram: v }))} />
+      <SaveBtn saved={saved} onClick={handleSave} />
     </div>
   );
 }
 
 // ─── Image List Editor ────────────────────────────────────────────────────────
 function ImageListEditor({ images, onChange }: { images: string[]; onChange: (imgs: string[]) => void }) {
-  const { token } = useAdmin();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
 
   function removeImg(idx: number) {
     onChange(images.filter((_, i) => i !== idx));
   }
 
-  async function handleUpload(files: FileList) {
-    if (!token) return;
-    setUploading(true);
-    try {
-      const newUrls: string[] = [];
-      for (const file of Array.from(files)) {
-        const url = await adminUploadImage(token, file);
-        newUrls.push(url);
-      }
-      onChange([...images, ...newUrls]);
-    } catch {
-      // Fallback to base64
-      const newImgs: string[] = [];
-      let loaded = 0;
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          newImgs.push(e.target?.result as string);
-          loaded++;
-          if (loaded === files.length) onChange([...images, ...newImgs]);
-        };
-        reader.readAsDataURL(file);
-      });
-    } finally {
-      setUploading(false);
-    }
+  function handleUpload(files: FileList) {
+    const newImgs: string[] = [];
+    let loaded = 0;
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        newImgs.push(e.target?.result as string);
+        loaded++;
+        if (loaded === files.length) {
+          onChange([...images, ...newImgs]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   return (
@@ -575,7 +482,6 @@ function ImageListEditor({ images, onChange }: { images: string[]; onChange: (im
         ))}
         <button
           onClick={() => fileRef.current?.click()}
-          disabled={uploading}
           style={{
             width: 56,
             height: 56,
@@ -583,13 +489,13 @@ function ImageListEditor({ images, onChange }: { images: string[]; onChange: (im
             border: "1px dashed #D4AF3760",
             background: "transparent",
             color: "#D4AF37",
-            cursor: uploading ? "wait" : "pointer",
+            cursor: "pointer",
             fontSize: "1.2rem",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
-        >{uploading ? "…" : "+"}</button>
+        >+</button>
       </div>
       <input
         ref={fileRef}
@@ -661,11 +567,10 @@ function Field({ label, value, onChange, multiline }: { label: string; value: st
   );
 }
 
-function SaveBtn({ saved, saving, onClick }: { saved: boolean; saving?: boolean; onClick: () => void }) {
+function SaveBtn({ saved, onClick }: { saved: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      disabled={saving}
       style={{
         width: "100%",
         background: saved ? "#166534" : "linear-gradient(135deg, #D4AF37, #A88A20)",
@@ -675,14 +580,14 @@ function SaveBtn({ saved, saving, onClick }: { saved: boolean; saving?: boolean;
         padding: "0.75rem",
         fontWeight: 700,
         fontSize: "0.85rem",
-        cursor: saving ? "wait" : "pointer",
+        cursor: "pointer",
         letterSpacing: "0.06em",
         textTransform: "uppercase",
         marginTop: "1rem",
         transition: "all 0.3s",
       }}
     >
-      {saving ? "Saving..." : saved ? "✓ Saved!" : "Save Changes"}
+      {saved ? "✓ Saved!" : "Save Changes"}
     </button>
   );
 }
