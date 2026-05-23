@@ -113,3 +113,7 @@ temp/
 client/public/__manus__/version.json
 .project-config.json
 *.project-config.json
+
+# SQLite WAL journal files
+*.db-shm
+*.db-wal
