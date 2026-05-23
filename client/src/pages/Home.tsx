@@ -4,9 +4,9 @@
  * Updated: Hero video background, enhanced custom order form with WhatsApp pre-fill
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { Instagram, MapPin, Star, ChevronDown, ChevronLeft, ChevronRight, ExternalLink, X, Menu, ShoppingBag, Sparkles, Heart, Upload, MessageCircle, Check, Calendar, DollarSign, Phone } from "lucide-react";
+import { Instagram, MapPin, Star, ChevronDown, X, Menu, ShoppingBag, Sparkles, Heart, Upload, MessageCircle, Check, Calendar, DollarSign, Phone } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { useCurrency, parseCadPrice } from "@/contexts/CurrencyContext";
@@ -15,7 +15,9 @@ import { SearchBar } from "@/components/SearchBar";
 import { useAdmin } from "@/contexts/AdminContext";
 import { AdminSignInModal } from "@/components/AdminSignIn";
 import { AdminToolbar } from "@/components/AdminToolbar";
-import { AdminEditPanel, AdminProduct, AdminReview, AdminSettings } from "@/components/AdminEditPanel";
+import { AdminEditPanel } from "@/components/AdminEditPanel";
+import type { ApiProduct, ApiReview, ApiGalleryItem, ApiSettings } from "@/lib/api";
+import { fetchPublicProducts, fetchPublicReviews, fetchPublicGallery, fetchPublicSettings } from "@/lib/api";
 
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
 const WHATSAPP_NUMBER = "14039867064";
@@ -551,8 +553,8 @@ function AboutSection() {
 }
 
 // ─── Products Section ──────────────────────────────────────────────────────────
-function ProductsSection({ products = PRODUCTS }: { products?: Array<Omit<typeof PRODUCTS[0], 'waMessage'> & { waMessage?: string }> }) {
-  const [selected, setSelected] = useState<typeof PRODUCTS[0] | null>(null);
+function ProductsSection({ products = [] }: { products?: ApiProduct[] }) {
+  const [selected, setSelected] = useState<ApiProduct | null>(null);
   const [activeImg, setActiveImg] = useState(0);
 
   return (
@@ -570,7 +572,7 @@ function ProductsSection({ products = PRODUCTS }: { products?: Array<Omit<typeof
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {PRODUCTS.map((product, i) => (
+          {products.map((product, i) => (
             <motion.div key={product.id} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: i * 0.1 }} className="product-card cursor-pointer" onClick={() => { setSelected(product); setActiveImg(0); }}>
               <div className="card-img aspect-square relative">
                 <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
@@ -595,7 +597,7 @@ function ProductsSection({ products = PRODUCTS }: { products?: Array<Omit<typeof
                     <h3 className="text-xl font-light text-cream" style={{ fontFamily: "'Cormorant Garamond', serif" }}>{product.name}</h3>
                     <p className="text-xs text-cream/50 mt-0.5" style={{ fontFamily: "'Jost', sans-serif" }}>{product.subtitle}</p>
                   </div>
-                  <ProductPrice price={product.price} />
+                  <ProductPrice price={product.actual_price ? `From $${product.actual_price} CAD` : "Custom Quote"} />
                 </div>
                 <p className="text-cream/50 text-sm leading-relaxed mt-3 line-clamp-2" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>{product.description}</p>
                 <button className="mt-4 text-[10px] tracking-widest uppercase text-[#D4AF37] hover:text-[#F0D060] transition-colors flex items-center gap-2" style={{ fontFamily: "'Jost', sans-serif" }}>
@@ -628,7 +630,7 @@ function ProductsSection({ products = PRODUCTS }: { products?: Array<Omit<typeof
                   <p className="section-label mb-3">{selected.tag}</p>
                   <h3 className="text-3xl font-light text-cream mb-1" style={{ fontFamily: "'Cormorant Garamond', serif" }}>{selected.name}</h3>
                   <p className="text-sm text-cream/50 mb-1" style={{ fontFamily: "'Jost', sans-serif" }}>{selected.subtitle}</p>
-                  <p className="text-[#D4AF37] font-medium mb-4" style={{ fontFamily: "'Jost', sans-serif" }}><ProductPriceInline price={selected.price} /></p>
+                  <p className="text-[#D4AF37] font-medium mb-4" style={{ fontFamily: "'Jost', sans-serif" }}><ProductPriceInline price={selected.actual_price ? `From $${selected.actual_price} CAD` : "Custom Quote"} /></p>
                   <div className="gold-divider" style={{ margin: "0 0 1rem 0" }} />
                   <p className="text-cream/70 text-sm leading-relaxed" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>{selected.description}</p>
                 </div>
@@ -701,7 +703,7 @@ function PricingSection() {
 }
 
 // ─── Gallery Section ───────────────────────────────────────────────────────────
-function GallerySection({ photos = GALLERY_PHOTOS }: { photos?: string[] }) {
+function GallerySection({ photos = [] }: { photos?: ApiGalleryItem[] }) {
   const [lightbox, setLightbox] = useState<string | null>(null);
 
   return (
@@ -716,15 +718,9 @@ function GallerySection({ photos = GALLERY_PHOTOS }: { photos?: string[] }) {
         </div>
 
         <div className="columns-2 md:columns-3 lg:columns-4 gap-3 space-y-3">
-          {photos.map((src, i) => (
-            <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: (i % 8) * 0.06 }} className="insta-item break-inside-avoid cursor-pointer mb-3 relative" onClick={() => setLightbox(src)}>
-              <img src={src} alt={`Gallery ${i + 1}`} className="w-full object-cover" />
-              {SOLD_INDICES.includes(i) && (
-                <div className="absolute top-2 left-2 px-2 py-0.5 text-[9px] font-bold tracking-widest uppercase" style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)", color: "#0d0d0d", fontFamily: "'Jost', sans-serif" }}>✦ Sold</div>
-              )}
-              {NEW_INDICES.includes(i) && (
-                <div className="absolute top-2 left-2 px-2 py-0.5 text-[9px] font-bold tracking-widest uppercase" style={{ background: "linear-gradient(135deg, #2d6a4f, #40916c)", color: "#fff", fontFamily: "'Jost', sans-serif" }}>✦ New</div>
-              )}
+          {photos.map((item, i) => (
+            <motion.div key={item.id} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: (i % 8) * 0.06 }} className="insta-item break-inside-avoid cursor-pointer mb-3 relative" onClick={() => setLightbox(item.image_url)}>
+              <img src={item.image_url} alt={item.caption || `Gallery ${i + 1}`} className="w-full object-cover" />
             </motion.div>
           ))}
         </div>
@@ -750,22 +746,31 @@ function GallerySection({ photos = GALLERY_PHOTOS }: { photos?: string[] }) {
 }
 
 // ─── Testimonials ──────────────────────────────────────────────────────────────
-// Google Maps review URL for ShaRiz Kreations
-const GOOGLE_REVIEW_URL = "https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsdiY1GsfSg";
-
-function TestimonialsSection({ reviews }: { reviews?: Array<{id: number; name: string; rating: number; text: string; date: string}> }) {
-  const displayReviews = reviews ?? TESTIMONIALS.map((t, i) => ({ id: i+1, name: t.name, rating: t.stars, text: t.text, date: t.source }));
-  const [current, setCurrent] = useState(0);
-  const total = displayReviews.length;
-  const prev = () => setCurrent(c => (c - 1 + total) % total);
-  const next = () => setCurrent(c => (c + 1) % total);
-
-  // Auto-advance every 5 seconds
-  useEffect(() => {
-    const timer = setInterval(next, 5000);
-    return () => clearInterval(timer);
-  }, [total]);
-
+function TestimonialsSection({ reviews }: { reviews?: ApiReview[] }) {
+  const displayReviews = (reviews && reviews.length > 0) ? reviews.map(r => ({ id: r.id, name: r.customer_name, rating: r.stars, text: r.review, date: r.product_name || new Date(r.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) })) : TESTIMONIALS.map((t, i) => ({ id: i+1, name: t.name, rating: t.stars, text: t.text, date: t.source }));
+  const [form, setForm] = useState({ name: "", review: "", stars: 5, product: "" });
+  const [submitted, setSubmitted] = useState(false);
+  const productOptions = [
+    "Resin Coasters", "Canvas Wall Art", "Serving Tray", "Islamic Calligraphy Art",
+    "Piggy Bank / Desk Decor", "Wedding Decor", "Custom Gift Set", "Corporate Gift", "Other",
+  ];
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.review.trim()) return;
+    const msg = [
+      `⭐ *New Review — ShaRiz Kreations*`,
+      ``,
+      `👤 *Name:* ${form.name}`,
+      form.product ? `🎨 *Product:* ${form.product}` : null,
+      `⭐ *Rating:* ${"★".repeat(form.stars)}${"".repeat(5 - form.stars)} (${form.stars}/5)`,
+      ``,
+      `💬 *Review:*`,
+      form.review,
+    ].filter(Boolean).join("\n");
+    window.open(getWhatsAppLink(msg), "_blank");
+    setSubmitted(true);
+    toast.success("Review sent to Shaz via WhatsApp! ✨", { style: { background: "#1a1a1a", border: "1px solid #D4AF37", color: "#EDE8DC" } });
+  };
   return (
     <section className="py-20 relative" id="reviews">
       <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(ellipse at center, #D4AF37 0%, transparent 70%)" }} />
@@ -778,80 +783,83 @@ function TestimonialsSection({ reviews }: { reviews?: Array<{id: number; name: s
           </h2>
           <div className="gold-divider" />
         </div>
-
-        {/* Carousel */}
-        <div className="relative max-w-3xl mx-auto mb-12">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={current}
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={{ duration: 0.45 }}
-              className="p-10 relative"
-              style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}
-            >
-              {/* Big quote mark */}
-              <div className="absolute top-4 right-6 text-8xl leading-none opacity-10 select-none" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#D4AF37" }}>&ldquo;</div>
-              {/* Stars */}
-              <div className="flex gap-1 mb-5">
-                {Array.from({ length: displayReviews[current].rating ?? 5 }).map((_, j) => (
-                  <Star key={j} size={14} fill="#D4AF37" className="text-[#D4AF37]" />
-                ))}
-              </div>
-              {/* Review text */}
-              <p className="text-cream/80 leading-relaxed mb-8 italic text-lg md:text-xl" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-                &ldquo;{displayReviews[current].text}&rdquo;
-              </p>
-              {/* Author */}
+        {/* Review cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-16">
+          {displayReviews.map((t, i) => (
+            <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, delay: i * 0.15 }} className="p-8 relative" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
+              <div className="flex gap-1 mb-4">{Array.from({ length: t.rating ?? (t as any).stars ?? 5 }).map((_, j) => <Star key={j} size={12} fill="#D4AF37" className="text-[#D4AF37]" />)}</div>
+              <p className="text-cream/70 leading-relaxed mb-6 italic" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.05rem" }}>"{ t.text}"</p>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)" }}>
-                  <span className="text-sm font-bold text-[#0d0d0d]">{displayReviews[current].name[0]}</span>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)" }}>
+                  <span className="text-xs font-bold text-[#0d0d0d]">{t.name[0]}</span>
                 </div>
                 <div>
-                  <p className="text-cream/90 text-sm font-medium" style={{ fontFamily: "'Jost', sans-serif" }}>{displayReviews[current].name}</p>
-                  <p className="text-cream/40 text-xs" style={{ fontFamily: "'Jost', sans-serif" }}>{displayReviews[current].date}</p>
+                  <p className="text-cream/80 text-sm font-medium" style={{ fontFamily: "'Jost', sans-serif" }}>{t.name}</p>
+                  <p className="text-cream/40 text-xs" style={{ fontFamily: "'Jost', sans-serif" }}>{t.date ?? (t as any).source}</p>
                 </div>
               </div>
+              <div className="absolute top-4 right-6 text-6xl leading-none opacity-10" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#D4AF37" }}>"</div>
             </motion.div>
-          </AnimatePresence>
-
-          {/* Prev / Next buttons */}
-          <button onClick={prev} aria-label="Previous review" className="absolute -left-5 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center transition-all hover:scale-110" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.35)", color: "#D4AF37" }}>
-            <ChevronLeft size={18} />
-          </button>
-          <button onClick={next} aria-label="Next review" className="absolute -right-5 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center transition-all hover:scale-110" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.35)", color: "#D4AF37" }}>
-            <ChevronRight size={18} />
-          </button>
-        </div>
-
-        {/* Dot indicators */}
-        <div className="flex justify-center gap-2 mb-12">
-          {displayReviews.map((_, i) => (
-            <button key={i} onClick={() => setCurrent(i)} aria-label={`Go to review ${i + 1}`} className="w-2 h-2 rounded-full transition-all" style={{ background: i === current ? "#D4AF37" : "rgba(212,175,55,0.25)", transform: i === current ? "scale(1.3)" : "scale(1)" }} />
           ))}
         </div>
-
-        {/* Google Review CTA */}
-        <div className="text-center">
-          <p className="text-cream/40 text-xs tracking-widest uppercase mb-4" style={{ fontFamily: "'Jost', sans-serif" }}>Share Your Experience</p>
-          <a
-            href={GOOGLE_REVIEW_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 px-8 py-4 text-xs tracking-widest uppercase transition-all hover:opacity-90 hover:scale-105"
-            style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)", color: "#0a0a0a", fontFamily: "'Jost', sans-serif", fontWeight: 600 }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#0a0a0a"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#0a0a0a"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#0a0a0a"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#0a0a0a"/>
-            </svg>
-            Write a Review on Google
-            <ExternalLink size={13} />
-          </a>
-          <p className="text-cream/25 text-xs mt-3" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Opens Google Maps — your review helps others find ShaRiz Kreations</p>
+        {/* Divider */}
+        <div className="gold-divider mb-12" />
+        {/* Leave a Review form — merged inline */}
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-8">
+            <p className="section-label mb-3">Share Your Experience</p>
+            <h3 className="text-3xl md:text-4xl font-light mb-2" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#EDE8DC" }}>
+              Leave a <span className="italic text-[#D4AF37]">Review</span>
+            </h3>
+            <p className="text-cream/40 text-sm" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Loved your piece? Your kind words help other customers discover ShaRiz Kreations.</p>
+          </div>
+          {submitted ? (
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-10 text-center" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "linear-gradient(135deg, #D4AF37, #A88A20)" }}>
+                <Heart size={24} className="text-[#0a0a0a]" fill="#0a0a0a" />
+              </div>
+              <h3 className="text-2xl font-light text-cream mb-2" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Thank You!</h3>
+              <p className="text-cream/50 text-sm mb-6" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Your review has been sent to Shaz via WhatsApp. It means the world!</p>
+              <div className="gold-divider" />
+              <p className="text-cream/60 text-sm mb-4 mt-4" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 300 }}>Love your piece? Share it on Instagram and tag us!</p>
+              <a href="https://www.instagram.com/sharizkreations" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 text-xs tracking-widest uppercase transition-all hover:opacity-80" style={{ background: "linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)", color: "#fff", fontFamily: "'Jost', sans-serif" }}>
+                <Instagram size={14} /> Tag @sharizkreations
+              </a>
+              <button onClick={() => setSubmitted(false)} className="mt-4 block mx-auto btn-outline-gold text-xs">Submit Another Review</button>
+            </motion.div>
+          ) : (
+            <motion.form initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} onSubmit={handleSubmit} className="p-8 space-y-5" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
+              <div>
+                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-3" style={{ fontFamily: "'Jost', sans-serif" }}>Your Rating</label>
+                <div className="flex gap-2">
+                  {[1,2,3,4,5].map((s) => (
+                    <button key={s} type="button" onClick={() => setForm(f => ({ ...f, stars: s }))} className="transition-transform hover:scale-110 active:scale-95">
+                      <Star size={24} fill={s <= form.stars ? "#D4AF37" : "none"} className={s <= form.stars ? "text-[#D4AF37]" : "text-cream/20"} />
+                    </button>
+                  ))}
+                  <span className="text-cream/40 text-sm self-center ml-2" style={{ fontFamily: "'Jost', sans-serif" }}>{form.stars}/5</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Your Name *</label>
+                <input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Sarah M." className="w-full px-4 py-3 text-sm text-cream bg-transparent outline-none transition-colors" style={{ border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif", fontWeight: 300 }} onFocus={e => e.target.style.borderColor = "rgba(212,175,55,0.6)"} onBlur={e => e.target.style.borderColor = "rgba(212,175,55,0.2)"} />
+              </div>
+              <div>
+                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Product Purchased (Optional)</label>
+                <select value={form.product} onChange={e => setForm(f => ({ ...f, product: e.target.value }))} className="w-full px-4 py-3 text-sm text-cream/70 bg-transparent outline-none" style={{ border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif", fontWeight: 300, background: "oklch(0.14 0.006 60)" }}>
+                  <option value="">Select a product...</option>
+                  {productOptions.map(p => <option key={p} value={p} style={{ background: "#1a1a14" }}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-cream/60 text-xs tracking-widest uppercase mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Your Review *</label>
+                <textarea required value={form.review} onChange={e => setForm(f => ({ ...f, review: e.target.value }))} rows={4} placeholder="Tell others about your experience with ShaRiz Kreations..." className="w-full px-4 py-3 text-sm text-cream bg-transparent outline-none resize-none transition-colors" style={{ border: "1px solid rgba(212,175,55,0.2)", fontFamily: "'Jost', sans-serif", fontWeight: 300 }} onFocus={e => e.target.style.borderColor = "rgba(212,175,55,0.6)"} onBlur={e => e.target.style.borderColor = "rgba(212,175,55,0.2)"} />
+              </div>
+              <button type="submit" className="w-full btn-gold flex items-center justify-center gap-2">
+                <Heart size={13} /> Submit Review
+              </button>
+            </motion.form>
+          )}
         </div>
       </div>
     </section>
@@ -1556,57 +1564,77 @@ export default function Home() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [editPanel, setEditPanel] = useState<"products" | "reviews" | "gallery" | "settings" | null>(null);
 
-  // Admin-editable state (starts from static data, persists in localStorage)
-  const [adminProducts, setAdminProducts] = useState<AdminProduct[]>(() => {
-    try {
-      const saved = localStorage.getItem("shariz_products");
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return PRODUCTS.map(p => ({ ...p, images: [...p.images] }));
-  });
+  // Live data from the database
+  const [adminProducts, setAdminProducts] = useState<ApiProduct[]>([]);
+  const [adminReviews, setAdminReviews] = useState<ApiReview[]>([]);
+  const [adminGallery, setAdminGallery] = useState<ApiGalleryItem[]>([]);
+  const [adminSettings, setAdminSettings] = useState<ApiSettings>({});
+  const [dataLoaded, setDataLoaded] = useState(false);
 
-  const [adminReviews, setAdminReviews] = useState<AdminReview[]>(() => {
+  // Load all data from the API on mount
+  const loadData = useCallback(async () => {
     try {
-      const saved = localStorage.getItem("shariz_reviews");
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return TESTIMONIALS.map((t, i) => ({ id: i + 1, name: t.name, rating: t.stars, text: t.text, date: t.source }));
-  });
+      const [products, reviews, gallery, settings] = await Promise.all([
+        fetchPublicProducts(),
+        fetchPublicReviews(),
+        fetchPublicGallery(),
+        fetchPublicSettings(),
+      ]);
+      setAdminProducts(products);
+      setAdminReviews(reviews);
+      setAdminGallery(gallery);
+      setAdminSettings(settings);
+    } catch (err) {
+      console.error("Failed to load data:", err);
+      // Fallback to static data if API fails
+      setAdminProducts(PRODUCTS.map((p, i) => ({
+        id: i + 1,
+        name: p.name,
+        subtitle: p.subtitle,
+        description: p.description,
+        actual_price: parseFloat(p.price.replace(/[^0-9.]/g, "")) || null,
+        sale_price: null,
+        discount_percent: 0,
+        tag: p.tag,
+        availability: p.availability,
+        images: p.images,
+        sort_order: i + 1,
+        is_active: 1,
+      })));
+      setAdminReviews(TESTIMONIALS.map((t, i) => ({
+        id: i + 1,
+        customer_name: t.name,
+        review: t.text,
+        stars: t.stars,
+        product_name: null,
+        is_approved: 1,
+        is_visible: 1,
+        sort_order: i,
+        created_at: new Date().toISOString(),
+      })));
+      setAdminGallery(GALLERY_PHOTOS.map((url, i) => ({ id: i + 1, image_url: url, caption: null, sort_order: i + 1, is_visible: 1 })));
+      setAdminSettings({ heroTitle: "Handcrafted Resin Art", heroSubtitle: "Bespoke pieces for your home, your heart, your story.", whatsapp: WHATSAPP_NUMBER, instagram: "https://www.instagram.com/sharizkreations" });
+    } finally {
+      setDataLoaded(true);
+    }
+  }, []);
 
-  const [adminGallery, setAdminGallery] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem("shariz_gallery");
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return GALLERY_PHOTOS;
-  });
+  useEffect(() => { loadData(); }, [loadData]);
 
-  const [adminSettings, setAdminSettings] = useState<AdminSettings>(() => {
-    try {
-      const saved = localStorage.getItem("shariz_settings");
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return { heroTitle: "Handcrafted Resin Art", heroSubtitle: "Bespoke pieces for your home, your heart, your story.", whatsapp: WHATSAPP_NUMBER, instagram: "sharizkreations" };
-  });
-
-  function saveProducts(p: AdminProduct[]) {
+  function saveProducts(p: ApiProduct[]) {
     setAdminProducts(p);
-    localStorage.setItem("shariz_products", JSON.stringify(p));
     toast.success("Products updated!");
   }
-  function saveReviews(r: AdminReview[]) {
+  function saveReviews(r: ApiReview[]) {
     setAdminReviews(r);
-    localStorage.setItem("shariz_reviews", JSON.stringify(r));
     toast.success("Reviews updated!");
   }
-  function saveGallery(g: string[]) {
+  function saveGallery(g: ApiGalleryItem[]) {
     setAdminGallery(g);
-    localStorage.setItem("shariz_gallery", JSON.stringify(g));
     toast.success("Gallery updated!");
   }
-  function saveSettings(s: AdminSettings) {
+  function saveSettings(s: ApiSettings) {
     setAdminSettings(s);
-    localStorage.setItem("shariz_settings", JSON.stringify(s));
     toast.success("Settings saved!");
   }
 

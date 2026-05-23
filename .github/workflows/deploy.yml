@@ -1,25 +1,18 @@
-name: Build & Deploy to Bluehost via FTP
+name: Deploy to Bluehost via SSH
+
 on:
   push:
     branches:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: write
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build-and-deploy:
-    name: Build React app and deploy via FTP
+    name: Build React app and deploy via SSH
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -36,20 +29,35 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Strip Manus runtime from index.html (clean for production)
+      - name: Strip Manus runtime from index.html
         run: python3 scripts/prepare-deploy.py
 
-      - name: Deploy to Bluehost via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: dist/public/
-          server-dir: /
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/__manus__/**
-            **/.gitkeep
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Deploy via rsync over SSH
+        run: |
+          rsync -avz --delete \
+            --exclude='.git*' \
+            --exclude='node_modules' \
+            --exclude='__manus__' \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p 22" \
+            dist/public/ \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_DEPLOY_PATH }}/"
+
+      - name: Verify deployment
+        run: |
+          sleep 5
+          LIVE_JS=$(curl -s "https://sharizkreations.com/index.html" | grep -o 'index-[^"]*\.js' | head -1)
+          BUILT_JS=$(grep -o 'index-[^"]*\.js' dist/public/index.html | head -1)
+          echo "Live site JS:  $LIVE_JS"
+          echo "Built JS:      $BUILT_JS"
+          if [ "$LIVE_JS" = "$BUILT_JS" ]; then
+            echo "✅ Deployment verified — live site is up to date!"
+          else
+            echo "⚠️  Bundles differ — CDN cache may still be serving old version, check in 1-2 min"
+          fi
