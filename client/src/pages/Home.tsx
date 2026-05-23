@@ -17,7 +17,7 @@ import { AdminSignInModal } from "@/components/AdminSignIn";
 import { AdminToolbar } from "@/components/AdminToolbar";
 import { AdminEditPanel } from "@/components/AdminEditPanel";
 import type { ApiProduct, ApiReview, ApiGalleryItem, ApiSettings } from "@/lib/api";
-import { fetchPublicProducts, fetchPublicReviews, fetchPublicGallery, fetchPublicSettings } from "@/lib/api";
+import { fetchPublicProducts, fetchPublicReviews, fetchPublicGallery, fetchPublicSettings, submitPublicReview } from "@/lib/api";
 
 // ─── WhatsApp ─────────────────────────────────────────────────────────────────
 const WHATSAPP_NUMBER = "14039867064";
@@ -746,7 +746,7 @@ function GallerySection({ photos = [] }: { photos?: ApiGalleryItem[] }) {
 }
 
 // ─── Testimonials ──────────────────────────────────────────────────────────────
-function TestimonialsSection({ reviews }: { reviews?: ApiReview[] }) {
+function TestimonialsSection({ reviews, onReviewSubmitted }: { reviews?: ApiReview[]; onReviewSubmitted?: () => void }) {
   const displayReviews = (reviews && reviews.length > 0)
     ? reviews.map(r => ({ id: r.id, name: r.customer_name, rating: r.stars, text: r.review, date: r.product_name || new Date(r.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" }) }))
     : TESTIMONIALS.map((t, i) => ({ id: i + 1, name: t.name, rating: t.stars, text: t.text, date: t.source }));
@@ -754,6 +754,30 @@ function TestimonialsSection({ reviews }: { reviews?: ApiReview[] }) {
   const total = displayReviews.length;
   const GOOGLE_REVIEW_URL = "https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4";
   const GOOGLE_MAPS_URL = "https://www.google.com/maps/search/?api=1&query=ShaRiz+Kreations";
+
+  // ── Add Review popup ──────────────────────────────────────────────────────
+  const [showPopup, setShowPopup] = useState(false);
+  const [rForm, setRForm] = useState({ name: "", text: "", stars: 5 });
+  const [hoverStar, setHoverStar] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitDone, setSubmitDone] = useState(false);
+
+  async function handleReviewSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!rForm.name.trim() || !rForm.text.trim()) return;
+    setSubmitting(true);
+    try {
+      await submitPublicReview({ customer_name: rForm.name.trim(), review: rForm.text.trim(), stars: rForm.stars });
+      setSubmitDone(true);
+      setRForm({ name: "", text: "", stars: 5 });
+      if (onReviewSubmitted) setTimeout(onReviewSubmitted, 1500);
+    } catch {
+      toast.error("Could not submit. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   // Auto-advance every 5 seconds
   useEffect(() => {
     if (total <= 1) return;
@@ -856,28 +880,149 @@ function TestimonialsSection({ reviews }: { reviews?: ApiReview[] }) {
             </div>
           )}
         </div>
-        {/* Google Review CTA */}
+        {/* CTA Row */}
         <div className="text-center mt-14">
           <div className="gold-divider mb-8" />
-          <a
-            href={GOOGLE_REVIEW_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 px-8 py-3.5 text-xs tracking-widest uppercase transition-all hover:opacity-80"
-            style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)", color: "#0d0d0d", fontFamily: "'Jost', sans-serif", fontWeight: 600 }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Write A Review On Google
-            <ExternalLink size={13} />
-          </a>
-          <p className="text-cream/30 text-xs mt-3" style={{ fontFamily: "'Jost', sans-serif" }}>Opens Google Maps — your review helps others find ShaRiz Kreations</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* Add review on this site */}
+            <button
+              onClick={() => { setShowPopup(true); setSubmitDone(false); }}
+              className="inline-flex items-center gap-2 px-8 py-3.5 text-xs tracking-widest uppercase transition-all hover:opacity-80"
+              style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)", color: "#0d0d0d", fontFamily: "'Jost', sans-serif", fontWeight: 700 }}
+            >
+              <Star size={14} fill="#0d0d0d" />
+              Add Your Review
+            </button>
+            {/* Write on Google */}
+            <a
+              href={GOOGLE_REVIEW_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-8 py-3.5 text-xs tracking-widest uppercase transition-all hover:opacity-80"
+              style={{ background: "transparent", border: "1px solid rgba(212,175,55,0.45)", color: "#D4AF37", fontFamily: "'Jost', sans-serif", fontWeight: 600 }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              Write On Google
+              <ExternalLink size={12} />
+            </a>
+          </div>
+          <p className="text-cream/30 text-xs mt-3" style={{ fontFamily: "'Jost', sans-serif" }}>Your kind words help others discover ShaRiz Kreations</p>
         </div>
       </div>
+
+      {/* ── Add Review Popup ────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            style={{ background: "rgba(0,0,0,0.78)", backdropFilter: "blur(6px)" }}
+            onClick={(e) => { if (e.target === e.currentTarget) { setShowPopup(false); setSubmitDone(false); } }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 28, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.96 }}
+              transition={{ duration: 0.3 }}
+              className="relative w-full max-w-md p-8"
+              style={{ background: "oklch(0.12 0.006 60)", border: "1px solid rgba(212,175,55,0.3)" }}
+            >
+              <button
+                onClick={() => { setShowPopup(false); setSubmitDone(false); }}
+                className="absolute top-4 right-4 text-cream/40 hover:text-cream/80 transition-colors"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+
+              {submitDone ? (
+                <div className="text-center py-6">
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)" }}>
+                    <Check size={24} className="text-[#0d0d0d]" />
+                  </div>
+                  <h3 className="text-xl mb-2" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#D4AF37" }}>Thank You!</h3>
+                  <p className="text-cream/60 text-sm" style={{ fontFamily: "'Jost', sans-serif" }}>Your review has been submitted and will appear once approved.</p>
+                  <button
+                    onClick={() => { setShowPopup(false); setSubmitDone(false); }}
+                    className="mt-6 px-6 py-2.5 text-xs tracking-widest uppercase hover:opacity-80 transition-all"
+                    style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)", color: "#0d0d0d", fontFamily: "'Jost', sans-serif", fontWeight: 700 }}
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-2xl mb-1" style={{ fontFamily: "'Cormorant Garamond', serif", color: "#D4AF37" }}>Share Your Experience</h3>
+                  <p className="text-cream/40 text-xs mb-6 uppercase tracking-widest" style={{ fontFamily: "'Jost', sans-serif" }}>ShaRiz Kreations</p>
+                  <form onSubmit={handleReviewSubmit} className="space-y-5">
+                    <div>
+                      <label className="block text-cream/50 text-xs uppercase tracking-widest mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Your Rating</label>
+                      <div className="flex gap-2">
+                        {[1,2,3,4,5].map(s => (
+                          <button
+                            key={s}
+                            type="button"
+                            onMouseEnter={() => setHoverStar(s)}
+                            onMouseLeave={() => setHoverStar(0)}
+                            onClick={() => setRForm(f => ({ ...f, stars: s }))}
+                            className="transition-transform hover:scale-110"
+                            aria-label={`${s} star`}
+                          >
+                            <Star
+                              size={26}
+                              fill={(hoverStar || rForm.stars) >= s ? "#D4AF37" : "transparent"}
+                              className={(hoverStar || rForm.stars) >= s ? "text-[#D4AF37]" : "text-cream/25"}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-cream/50 text-xs uppercase tracking-widest mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Your Name</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Sarah M."
+                        value={rForm.name}
+                        onChange={e => setRForm(f => ({ ...f, name: e.target.value }))}
+                        className="w-full px-4 py-3 text-sm text-cream bg-transparent outline-none placeholder-cream/20"
+                        style={{ border: "1px solid rgba(212,175,55,0.25)", fontFamily: "'Jost', sans-serif" }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-cream/50 text-xs uppercase tracking-widest mb-2" style={{ fontFamily: "'Jost', sans-serif" }}>Your Review</label>
+                      <textarea
+                        required
+                        rows={4}
+                        placeholder="Tell us about your experience..."
+                        value={rForm.text}
+                        onChange={e => setRForm(f => ({ ...f, text: e.target.value }))}
+                        className="w-full px-4 py-3 text-sm text-cream bg-transparent outline-none placeholder-cream/20 resize-none"
+                        style={{ border: "1px solid rgba(212,175,55,0.25)", fontFamily: "'Jost', sans-serif" }}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="w-full py-3.5 text-xs tracking-widest uppercase hover:opacity-80 transition-all disabled:opacity-50"
+                      style={{ background: "linear-gradient(135deg, #C9A84C, #D4AF37)", color: "#0d0d0d", fontFamily: "'Jost', sans-serif", fontWeight: 700 }}
+                    >
+                      {submitting ? "Submitting..." : "Submit Review"}
+                    </button>
+                  </form>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
@@ -1662,7 +1807,7 @@ export default function Home() {
       <ProductsSection products={adminProducts} />
       <PricingSection />
       <GallerySection photos={adminGallery} />
-      <TestimonialsSection reviews={adminReviews} />
+      <TestimonialsSection reviews={adminReviews} onReviewSubmitted={loadData} />
       <CustomOrdersSection />
       <FAQSection />
       <BookConsultationSection />

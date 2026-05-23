@@ -86,6 +86,21 @@ export async function fetchPublicSettings(): Promise<ApiSettings> {
   return handleResponse<ApiSettings>(resp);
 }
 
+// ─── Public: Submit Review ───────────────────────────────────────────────────
+export async function submitPublicReview(data: {
+  customer_name: string;
+  review: string;
+  stars: number;
+  product_name?: string;
+}): Promise<{ id: number; message: string }> {
+  const resp = await fetch("/api/admin/reviews", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return handleResponse<{ id: number; message: string }>(resp);
+}
+
 // ─── Admin: Products ──────────────────────────────────────────────────────────
 export async function adminFetchProducts(token: string): Promise<ApiProduct[]> {
   const resp = await fetch("/api/admin/products", { headers: authHeaders(token) });
