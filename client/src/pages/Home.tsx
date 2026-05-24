@@ -753,7 +753,7 @@ function TestimonialsSection({ reviews, onReviewSubmitted }: { reviews?: ApiRevi
   const [current, setCurrent] = useState(0);
   const total = displayReviews.length;
   const GOOGLE_REVIEW_URL = "https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4";
-  const GOOGLE_MAPS_URL = "https://www.google.com/maps/search/?api=1&query=ShaRiz+Kreations";
+  const GOOGLE_MAPS_URL = "https://www.google.com/maps/search/?api=1&query=3622+Allan+Drive+SW+Edmonton+AB+T6R0L4";
 
   // ── Add Review popup ──────────────────────────────────────────────────────
   const [showPopup, setShowPopup] = useState(false);
@@ -1658,7 +1658,7 @@ function ContactSection() {
           {[
             { icon: MessageCircle, title: "WhatsApp", value: "+1 (403) 986-7064", href: getWhatsAppLink("Hi Shaz! I'd like to inquire about your resin art.") },
             { icon: Instagram, title: "Instagram", value: "@sharizkreations", href: "https://www.instagram.com/sharizkreations/" },
-            { icon: MapPin, title: "Location", value: "Canada", href: "#" },
+            { icon: MapPin, title: "Location", value: "3622 Allan Drive SW, Edmonton, AB T6R 0L4", href: "https://www.google.com/maps/search/?api=1&query=3622+Allan+Drive+SW+Edmonton+AB+T6R0L4" },
           ].map((item, i) => (
             <motion.a key={i} href={item.href} target={item.href.startsWith("http") || item.href.startsWith("https://wa") ? "_blank" : undefined} rel="noopener noreferrer" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: i * 0.15 }} className="flex flex-col items-center text-center p-8 group transition-all duration-300" style={{ background: "oklch(0.14 0.006 60)", border: "1px solid rgba(212,175,55,0.2)" }}>
               <div className="w-12 h-12 flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110" style={{ background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.4)" }}>
