@@ -752,7 +752,7 @@ function TestimonialsSection({ reviews, onReviewSubmitted }: { reviews?: ApiRevi
     : TESTIMONIALS.map((t, i) => ({ id: i + 1, name: t.name, rating: t.stars, text: t.text, date: t.source }));
   const [current, setCurrent] = useState(0);
   const total = displayReviews.length;
-  const GOOGLE_REVIEW_URL = "https://search.google.com/local/writereview?placeid=ChIJN1t_tDeuEmsRUsoyG83frY4";
+  const GOOGLE_REVIEW_URL = "https://www.google.com/maps/search/?api=1&query=ShaRiz+Kreations+3622+Allan+Drive+SW+Edmonton+AB+T6R0L4";
   const GOOGLE_MAPS_URL = "https://www.google.com/maps/search/?api=1&query=3622+Allan+Drive+SW+Edmonton+AB+T6R0L4";
 
   // ── Add Review popup ──────────────────────────────────────────────────────
